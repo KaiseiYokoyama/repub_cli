@@ -1,13 +1,11 @@
-use std::str::FromStr;
-use std::convert::TryFrom;
 use clap::ArgMatches;
-use crate::prelude::RepubResult;
-use std::path::PathBuf;
+
+use crate::prelude::*;
 use crate::load::load::source::Source;
 use crate::load::load::config::Config;
 
 /// 入力された情報(設定およびfile)
-struct Input {
+pub struct Input {
     cfg: config::Config,
     src: Vec<source::Source>,
 }
@@ -45,14 +43,8 @@ impl<'a> TryFrom<clap::ArgMatches<'a>> for Input {
 }
 
 mod config {
+    use super::*;
     use writing_mode::WritingMode;
-
-    use std::convert::TryFrom;
-    use std::io::{Write, Read};
-
-    use serde::{Serialize, Deserialize};
-    use failure::ResultExt;
-    use crate::prelude::message::warning::RepubWarning;
 
     /// 出力設定
     #[derive(Serialize, Deserialize)]
@@ -241,10 +233,7 @@ mod config {
 }
 
 mod source {
-    use std::path::PathBuf;
-    use std::convert::TryFrom;
-    use failure::_core::str::FromStr;
-    use crate::prelude::RepubResult;
+    use super::*;
 
     #[derive(Debug)]
     pub struct Source {
