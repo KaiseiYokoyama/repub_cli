@@ -1,4 +1,5 @@
 pub use message::error::RepubError;
+pub use message::warning::RepubWarning;
 
 pub mod message {
     pub mod error {

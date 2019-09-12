@@ -1,5 +1,6 @@
 mod prelude;
 mod app;
+mod load;
 
 #[macro_use]
 extern crate clap;
