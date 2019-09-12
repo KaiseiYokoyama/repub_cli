@@ -24,7 +24,7 @@ pub mod message {
         impl Display for RepubError {
             fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
                 use colored::*;
-                write!(f, "{} {}","[Error]".red().bold(), &self)
+                write!(f, "{} {}","[Error]".red().bold(), self.as_ref())
             }
         }
     }
@@ -51,7 +51,7 @@ pub mod message {
         impl Display for RepubWarning {
             fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
                 use colored::*;
-                write!(f, "{} {}","[Warning]".yellow().bold(), &self)
+                write!(f, "{} {}","[Warning]".yellow().bold(), self.as_ref())
             }
         }
     }
