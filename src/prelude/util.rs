@@ -3,6 +3,7 @@ pub use message::error::RepubError;
 pub mod message {
     pub mod error {
         use std::fmt::{Display, Formatter};
+        use colored::Colorize;
 
         pub struct RepubError(pub String);
 
@@ -21,7 +22,8 @@ pub mod message {
 
         impl Display for RepubError {
             fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-                write!(f, "[Error] {}", &self)
+                use colored::*;
+                write!(f, "{} {}","[Error]".red(), &self)
             }
         }
     }
