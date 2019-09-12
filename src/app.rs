@@ -52,3 +52,37 @@ pub fn app<'a,'b>() -> App<'a,'b> {
             .short("h")
             .takes_value(true))
 }
+
+mod validators {
+    use std::path::{Path, PathBuf};
+    use failure::_core::str::FromStr;
+
+    pub fn md_validator(v: String) -> Result<(), String> {
+        let path = PathBuf::from_str(&v).map_err(|e| format!("{:?}", e))?;
+        let current_dir = &std::env::current_dir().map_err(|e| format!("{:?}", e))?;
+
+        let md_path = if path.is_absolute() {
+            path.to_path_buf()
+        } else {
+            // 指定されたディレクトリへのpath
+            current_dir.join(path)
+        };
+
+        if !md_path.exists() {
+            return Err(format!("[ERROR] {:?} does not exist.", &md_path));
+        }
+
+        if md_path.is_file() {
+            match md_path.extension() {
+                None => {}
+                Some(ext) => {
+                    if ext != "md" {
+                        return Err(format!("[ERROR] {:?} is not .md file.", &md_path));
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
