@@ -1,8 +1,6 @@
 use std::path::{PathBuf, Path};
 
-pub trait ToXHTML {
-    fn to_xhtml(&self, tmp_files: &TmpFiles) -> String;
-}
+pub type RepubResult<T> = Result<T,failure::Error>;
 
 pub trait PathDiff {
     fn path_diff<T>(from: &T, to: &T) -> Option<PathBuf>
