@@ -3,5 +3,15 @@ name = "repub"
 version = "0.1.0"
 authors = ["crome <crome110mine@gmail.com>"]
 edition = "2018"
+description = "convert markdown(s) to epub"
+license = "MIT"
+categories = ["epub","markdown"]
 
 [dependencies]
+failure = "0.1"
+comrak = "0.6"
+clap = "2"
+rand = "0.6"
+chrono = "0.4"
+scraper = "0.10"
+zip = "0.5"
