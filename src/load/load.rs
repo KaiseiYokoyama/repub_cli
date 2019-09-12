@@ -5,6 +5,7 @@ use crate::load::load::source::Source;
 use crate::load::load::config::Config;
 
 /// 入力された情報(設定およびfile)
+#[derive(Debug)]
 pub struct Input {
     cfg: config::Config,
     src: Vec<source::Source>,
@@ -47,7 +48,7 @@ mod config {
     use writing_mode::WritingMode;
 
     /// 出力設定
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, Debug)]
     pub struct Config {
         pub writing_mode: WritingMode,
         pub title: String,
@@ -134,7 +135,7 @@ mod config {
                         Err(_) => {
                             let level_alt = 2;
                             println!("{}",
-                                     RepubWarning(format!("Warning {} は目次のレベルに設定できません {} に設定しました", &level, &level_alt)));
+                                     RepubWarning(format!("{} は目次のレベルに設定できません {} に設定しました", &level, &level_alt)));
                             level_alt
                         }
                     }
@@ -160,6 +161,7 @@ mod config {
         use serde::de::{self, Visitor};
 
         ///  [参考](https://developer.mozilla.org/ja/docs/Web/CSS/writing-mode)
+        #[derive(Debug)]
         pub enum WritingMode {
             /// コンテンツは左から右へ水平に、上から下へ垂直方向に流れます。次の水平な行は、前の行の下に配置されます。
             HorizontalTb,
@@ -312,3 +314,13 @@ mod source {
 //    }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn app_to_input() {
+        let app = crate::app::app();
+        let input = Input::try_from(app.get_matches()).unwrap();
+    }
+}
