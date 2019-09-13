@@ -1,8 +1,8 @@
 use clap::ArgMatches;
 
 use crate::prelude::*;
-use crate::load::load::source::Source;
-use crate::load::load::config::Config;
+use source::Source;
+use config::Config;
 
 /// 入力された情報(設定およびfile)
 #[derive(Debug)]
@@ -324,7 +324,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn app_to_input() -> RepubResult<()>{
+    fn app_to_input() -> RepubResult<()> {
         let app = crate::app::app();
         let input = Input::try_from(app.get_matches())?;
 

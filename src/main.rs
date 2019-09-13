@@ -8,11 +8,9 @@ extern crate clap;
 #[macro_use]
 extern crate failure;
 
-use crate::prelude::*;
+use crate::{prelude::*, load::*};
 
 fn main() -> RepubResult<()> {
-    use crate::load::load::Input;
-
     let app = crate::app::app();
     let input = Input::try_from(app.get_matches())?;
 
