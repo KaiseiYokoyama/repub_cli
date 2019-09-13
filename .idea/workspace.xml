@@ -37,6 +37,7 @@
   </component>
   <component name="ProjectId" id="1QjQ2ED8mjFeKLZHUD2IAGsIO5g" />
   <component name="PropertiesComponent">
+    <property name="DefaultHtmlFileTemplate" value="HTML File" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
