@@ -1,0 +1,4 @@
+language: rust
+script:
+  - cargo build --verbose --all
+  - cargo run --package repub --bin repub test -t title -c creator -l lang
