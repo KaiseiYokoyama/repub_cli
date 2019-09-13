@@ -50,11 +50,15 @@ mod config {
     /// 出力設定
     #[derive(Serialize, Deserialize, Debug)]
     pub struct Config {
+        /// 書式
         pub writing_mode: WritingMode,
         pub title: String,
         pub creator: String,
         pub language: String,
+        /// epub形式で本の識別に利用されるid
         pub book_id: String,
+        /// 目次に表示するheaderの最低レベル
+        /// 1を指定すればh1のみ、5以上を指定すればh1~h5の全てのheaderが目次に表示される
         pub min_toc_level: u8,
     }
 
@@ -160,6 +164,7 @@ mod config {
         use serde::{Serialize, Serializer, Deserialize, Deserializer};
         use serde::de::{self, Visitor};
 
+        /// 書式
         ///  [参考](https://developer.mozilla.org/ja/docs/Web/CSS/writing-mode)
         #[derive(Debug)]
         pub enum WritingMode {
@@ -319,8 +324,10 @@ mod test {
     use super::*;
 
     #[test]
-    fn app_to_input() {
+    fn app_to_input() -> RepubResult<()>{
         let app = crate::app::app();
-        let input = Input::try_from(app.get_matches()).unwrap();
+        let input = Input::try_from(app.get_matches())?;
+
+        Ok(())
     }
 }
