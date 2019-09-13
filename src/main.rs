@@ -2,6 +2,7 @@ mod prelude;
 mod app;
 mod load;
 mod data;
+mod tmpfile;
 mod test;
 
 #[macro_use]
