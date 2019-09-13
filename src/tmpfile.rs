@@ -1,20 +1,20 @@
 use crate::prelude::*;
 
-use meta_inf::MetaInf;
-use oebps::OEBPS;
-use mimetype::Mimetype;
+pub use meta_inf::MetaInf;
+pub use oebps::OEBPS;
+pub use mimetype::Mimetype;
 
 const TMP_DIR_PATH_STR: &str = "repub_tmp";
 
 pub struct TmpDir {
     /// 一時ディレクトリのpath
-    path: PathBuf,
+    pub path: PathBuf,
     /// META-INF directory
-    meta_inf: MetaInf,
+    pub meta_inf: MetaInf,
     /// OEBPS directory
-    oebps: OEBPS,
+    pub oebps: OEBPS,
     /// mimetype
-    mimetype: Mimetype,
+    pub mimetype: Mimetype,
 }
 
 impl TmpDir {
