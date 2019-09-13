@@ -135,7 +135,7 @@ mod config {
                         Err(_) => {
                             let level_alt = 2;
                             println!("{}",
-                                     RepubWarning(format!("{} は目次のレベルに設定できません {} に設定しました", &level, &level_alt)));
+                                     RepubWarning(format!("{} は目次の最低レベルに設定できません {} に設定しました", &level, &level_alt)));
                             level_alt
                         }
                     }
