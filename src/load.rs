@@ -68,7 +68,6 @@ mod config {
         type Error = failure::Error;
 
         fn try_from(value: &clap::ArgMatches<'a>) -> Result<Self, Self::Error> {
-            use std::str::FromStr;
             use rand::Rng;
             use rand::distributions::Alphanumeric;
 
@@ -145,8 +144,7 @@ mod config {
                         Ok(ok) => ok - 1,
                         Err(_) => {
                             let level_alt = 2;
-                            println!("{}",
-                                     RepubWarning(format!("{} は目次の最低レベルに設定できません {} に設定しました", &level, &level_alt)));
+                            RepubWarning(format!("{} は目次の最低レベルに設定できません {} に設定しました", &level, &level_alt)).print();
                             level_alt
                         }
                     }
@@ -166,11 +164,11 @@ mod config {
     }
 
     mod writing_mode {
+        use super::*;
         use std::fmt;
 
-        use std::str::FromStr;
-        use serde::{Serialize, Serializer, Deserialize, Deserializer};
-        use serde::de::{self, Visitor};
+        use serde::{Serializer, Deserializer};
+        use serde::de::Visitor;
 
         /// 書式
         ///  [参考](https://developer.mozilla.org/ja/docs/Web/CSS/writing-mode)
@@ -334,7 +332,7 @@ mod test {
     #[test]
     fn app_to_input() -> RepubResult<()> {
         let app = crate::app::app();
-        let input = Input::try_from(app.get_matches())?;
+        let _input = Input::try_from(app.get_matches())?;
 
         Ok(())
     }

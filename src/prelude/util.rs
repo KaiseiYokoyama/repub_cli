@@ -1,10 +1,23 @@
-pub use message::error::RepubError;
-pub use message::warning::RepubWarning;
+pub use message::{
+    Message,
+    error::RepubError,
+    warning::RepubWarning,
+};
+
+use crate::prelude::*;
 
 pub mod message {
+    use super::*;
+
+    /// ログレベルに関係なく表示されるメッセージ
+    pub trait Message: Display {
+        fn print(&self) {
+            println!("{}", &self)
+        }
+    }
+
     pub mod error {
-        use std::fmt::{Display, Formatter};
-        use colored::Colorize;
+        use super::*;
 
         pub struct RepubError(pub String);
 
@@ -24,14 +37,15 @@ pub mod message {
         impl Display for RepubError {
             fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
                 use colored::*;
-                write!(f, "{} {}","[Error]".red().bold(), self.as_ref())
+                write!(f, "{} {}", "[Error]".red().bold(), self.as_ref())
             }
         }
+
+        impl Message for RepubError {}
     }
 
     pub mod warning {
-        use std::fmt::{Display, Formatter};
-        use colored::Colorize;
+        use super::*;
 
         pub struct RepubWarning(pub String);
 
@@ -51,8 +65,10 @@ pub mod message {
         impl Display for RepubWarning {
             fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
                 use colored::*;
-                write!(f, "{} {}","[Warning]".yellow().bold(), self.as_ref())
+                write!(f, "{} {}", "[Warning]".yellow().bold(), self.as_ref())
             }
         }
+
+        impl Message for RepubWarning {}
     }
 }

@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 use clap::{App, Arg};
 
 pub fn app<'a,'b>() -> App<'a,'b> {
@@ -54,8 +56,7 @@ pub fn app<'a,'b>() -> App<'a,'b> {
 }
 
 mod validators {
-    use std::path::{Path, PathBuf};
-    use failure::_core::str::FromStr;
+    use super::*;
 
     pub fn md_validator(v: String) -> Result<(), String> {
         let path = PathBuf::from_str(&v).map_err(|e| format!("{:?}", e))?;

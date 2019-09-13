@@ -5,11 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="36f9786c-c2fe-44c1-9c17-54c2970a6915" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/test/test1.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/data.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/app.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/load.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/load.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prelude/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/prelude/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prelude/util.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/prelude/util.rs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -26,6 +26,7 @@
       <list>
         <option value="Rust File" />
         <option value="CSS File" />
+        <option value="HTML File" />
       </list>
     </option>
   </component>
@@ -73,7 +74,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Cargo Command.travis script">
+  <component name="RunManager" selected="Cargo Command.Run repub">
     <configuration name="Run repub" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="channel" value="DEFAULT" />
       <option name="command" value="run --package repub --bin repub test -h 1024" />
@@ -141,7 +142,7 @@
       <updated>1568279011839</updated>
       <workItem from="1568279014492" duration="1065000" />
       <workItem from="1568281330506" duration="90000" />
-      <workItem from="1568281453583" duration="18574000" />
+      <workItem from="1568281453583" duration="19727000" />
     </task>
     <servers />
   </component>
