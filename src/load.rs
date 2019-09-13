@@ -250,11 +250,11 @@ mod config {
 mod source {
     use super::*;
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub struct Source {
-        file_name: String,
-        ext: Option<String>,
-        path: PathBuf,
+        pub file_name: String,
+        pub ext: Option<String>,
+        pub path: PathBuf,
     }
 
     impl Source {
