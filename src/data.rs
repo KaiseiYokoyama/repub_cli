@@ -3,7 +3,8 @@ use crate::load::*;
 
 use files::Files;
 
-struct Data {
+#[derive(Debug)]
+pub struct Data {
     cfg: Config,
     files: Files,
 }
@@ -24,6 +25,7 @@ impl From<Input> for Data {
 mod files {
     use super::*;
 
+    #[derive(Debug)]
     pub struct Files {
         /// 変換を必要とするファイル
         content_files: Vec<ContentFile>,
@@ -63,6 +65,7 @@ mod files {
 
     /// コンテンツ
     /// 変換を必要とするファイル
+    #[derive(Debug)]
     struct ContentFile {
         src: Source,
         convert_type: ConvertType,
@@ -73,7 +76,7 @@ mod files {
 
         fn try_from(value: Source) -> Result<Self, Self::Error> {
             let convert_type = {
-                let ext = value.ext.as_ref().unwrap();
+                let ext = value.ext.as_ref().ok_or(())?;
                 match ext.as_str() {
                     "md" => ConvertType::MarkdownToXHTML,
                     _ => return Err(()),
@@ -88,6 +91,7 @@ mod files {
     }
 
     /// 変換の種類
+    #[derive(Debug)]
     enum ConvertType {
         MarkdownToXHTML,
     }

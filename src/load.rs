@@ -7,8 +7,8 @@ pub use config::Config;
 /// 入力された情報(設定およびfile)
 #[derive(Debug)]
 pub struct Input {
-    cfg: config::Config,
-    src: Vec<source::Source>,
+    pub cfg: config::Config,
+    pub src: Vec<source::Source>,
 }
 
 trait ArgMatchesExt {

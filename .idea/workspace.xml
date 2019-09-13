@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="36f9786c-c2fe-44c1-9c17-54c2970a6915" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/test/test1.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/data.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/load.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/load.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
@@ -23,6 +25,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Rust File" />
+        <option value="CSS File" />
       </list>
     </option>
   </component>
@@ -37,6 +40,7 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
+    <property name="list.type.of.created.stylesheet" value="CSS" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -136,7 +140,7 @@
       <updated>1568279011839</updated>
       <workItem from="1568279014492" duration="1065000" />
       <workItem from="1568281330506" duration="90000" />
-      <workItem from="1568281453583" duration="18146000" />
+      <workItem from="1568281453583" duration="18574000" />
     </task>
     <servers />
   </component>
