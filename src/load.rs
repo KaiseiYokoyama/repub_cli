@@ -1,8 +1,8 @@
 use clap::ArgMatches;
 
 use crate::prelude::*;
-use source::Source;
-use config::Config;
+pub use source::Source;
+pub use config::Config;
 
 /// 入力された情報(設定およびfile)
 #[derive(Debug)]
@@ -11,22 +11,22 @@ pub struct Input {
     src: Vec<source::Source>,
 }
 
+trait ArgMatchesExt {
+    fn value_of_or_err(&self, name: &str) -> RepubResult<&str>;
+}
+
+impl<'a> ArgMatchesExt for ArgMatches<'a> {
+    fn value_of_or_err(&self, name: &str) -> RepubResult<&str> {
+        self.value_of(name).ok_or(
+            format_err!("引数{}がありません",name)
+        )
+    }
+}
+
 impl<'a> TryFrom<clap::ArgMatches<'a>> for Input {
     type Error = failure::Error;
 
     fn try_from(value: clap::ArgMatches<'a>) -> Result<Self, Self::Error> {
-        trait ArgMatchesExt {
-            fn value_of_or_err(&self, name: &str) -> RepubResult<&str>;
-        }
-
-        impl<'a> ArgMatchesExt for ArgMatches<'a> {
-            fn value_of_or_err(&self, name: &str) -> RepubResult<&str> {
-                self.value_of(name).ok_or(
-                    format_err!("引数{}がありません",name)
-                )
-            }
-        }
-
         let source_path_buf = {
             let source_path_str = value.value_of_or_err("input")?;
             PathBuf::from_str(source_path_str)?
@@ -50,6 +50,8 @@ mod config {
     /// 出力設定
     #[derive(Serialize, Deserialize, Debug)]
     pub struct Config {
+        /// コマンドの<input>として与えられたpath(変換対象)
+        pub target: PathBuf,
         /// 書式
         pub writing_mode: WritingMode,
         pub title: String,
@@ -69,6 +71,11 @@ mod config {
             use std::str::FromStr;
             use rand::Rng;
             use rand::distributions::Alphanumeric;
+
+            let target = {
+                let source_path_str = value.value_of_or_err("input")?;
+                PathBuf::from_str(source_path_str)?
+            };
 
             let title = {
                 if let Some(title) = value.value_of("title") {
@@ -147,6 +154,7 @@ mod config {
             };
 
             Ok(Self {
+                target,
                 writing_mode,
                 title,
                 creator,

@@ -6,8 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="36f9786c-c2fe-44c1-9c17-54c2970a6915" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/load/load.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/load.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/load/mod.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/load.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/load.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -51,6 +50,11 @@
     <property name="project.structure.proportion" value="0.0" />
     <property name="project.structure.side.proportion" value="0.0" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -132,7 +136,7 @@
       <updated>1568279011839</updated>
       <workItem from="1568279014492" duration="1065000" />
       <workItem from="1568281330506" duration="90000" />
-      <workItem from="1568281453583" duration="14920000" />
+      <workItem from="1568281453583" duration="16556000" />
     </task>
     <servers />
   </component>
