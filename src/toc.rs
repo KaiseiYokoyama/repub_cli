@@ -49,6 +49,14 @@ impl TableOfContents {
             }
         }
     }
+
+    pub fn size(&self) -> usize {
+        let mut size = 0;
+        for item in &self.items {
+            size += item.size();
+        }
+        size
+    }
 }
 
 pub trait ToCItemTrait {
@@ -101,6 +109,14 @@ pub trait ToCItemTrait {
         li.push(Box::new(ol));
 
         Box::new(li)
+    }
+
+    fn size(&self) -> usize {
+        let mut size = 0;
+        for item in self.items() {
+            size += item.size();
+        }
+        size + 1
     }
 }
 
@@ -201,7 +217,7 @@ mod xhtml_elem {
                 .map(|elem| {
                     elem.to_html()
                 }).collect::<Vec<String>>().join("\n");
-            if self.elems.len()==0 {
+            if self.elems.len() == 0 {
                 format!("")
             } else if self.hidden {
                 format!("<ol hidden=\"hidden\">\n{}\n</ol>", &inner_text)
@@ -286,6 +302,7 @@ mod xhtml_elem {
     }
 }
 
+/// execute with --nocapture option
 #[test]
 fn test() {
     let mut toc = TableOfContents::new();
@@ -301,7 +318,7 @@ fn test() {
         toc.push(Box::new(tocc));
     }
 
-    println!("{}", toc.to_xhtml(2,&PathBuf::from_str("ex").unwrap()));
+    println!("{}", toc.to_xhtml(2, &PathBuf::from_str("ex").unwrap()));
 
     assert_eq!(1, 1)
 }
