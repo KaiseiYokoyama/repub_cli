@@ -3,6 +3,7 @@ mod app;
 mod load;
 mod data;
 mod tmpfile;
+mod toc;
 mod test;
 
 #[macro_use]
