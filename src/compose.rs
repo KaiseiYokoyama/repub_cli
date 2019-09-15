@@ -27,7 +27,7 @@ impl TryFrom<InputData> for Composer {
 
 impl Composer {
     /// css を tmp directoryに格納する
-    /// *compose_css* -> compose_static -> compose_contents
+    /// *compose_css* -> compose_static -> compose_contents -> compose_nav -> compose_opf
     pub fn compose_css(&mut self) -> RepubResult<&mut Self> {
         for file in &self.data.files.style_files {
             let relative_path = PathBuf::path_diff(&self.data.cfg.target, &file.path).unwrap();
@@ -46,7 +46,7 @@ impl Composer {
     }
 
     /// static file を tmp directory に格納する
-    /// compose_css -> *compose_static* -> compose_contents
+    /// compose_css -> *compose_static* -> compose_contents -> compose_nav -> compose_opf
     pub fn compose_static(&mut self) -> RepubResult<&mut Self> {
         for file in &self.data.files.static_files {
             let relative_path = PathBuf::path_diff(&self.data.cfg.target, &file.path).unwrap();
@@ -65,7 +65,7 @@ impl Composer {
     }
 
     /// content file を変換して, 内容を目次に登録し tmp directory に格納する
-    /// compose_css -> compose_static -> *compose_contents*
+    /// compose_css -> compose_static -> *compose_contents* -> compose_nav -> compose_opf
     pub fn compose_contents(&mut self) -> RepubResult<&mut Self> {
         use html5ever::{
             serialize,
@@ -222,6 +222,39 @@ impl Composer {
         Ok(self)
     }
 
+    /// self.toc を参照して, navigation.xhtml を生成する
+    /// compose_css -> compose_static -> compose_contents -> *compose_nav* -> compose_opf
+    pub fn compose_nav(&mut self) -> RepubResult<&mut Self> {
+        let path = self.tmp_dir.oebps.path.join("navigation.xhtml");
+
+        // todo configによる目次タイトルの変更
+        let h1_title = "目次";
+
+        // スタイルシートへの<link>要素を生成
+        let style_xhtml = self.composed.styles_links(&to);
+
+        // 目次要素を生成
+        let toc = self.toc.to_xhtml(self.data.cfg.min_toc_level, &path);
+
+        let xhtml = format!(
+            include_str!("literals/navigation.xhtml"),
+            h1_title,
+            style_xhtml,
+            h1_title,
+            toc
+        );
+
+        std::fs::File::create(&path)?.write_all(xhtml.as_bytes())?;
+
+        // composedに登録
+        let composed = ComposedItem::without_src(&path, 0)?;
+        self.composed.contents.push(composed);
+
+        // todo ログ出力
+
+        Ok(self)
+    }
+
     /// すべてのファイルを(必要があれば)変換, 書き換えをして tmp directory に格納する
     pub fn compose(&mut self) -> RepubResult<()> {
         self.compose_css()?.compose_static()?.compose_contents()?;
@@ -259,7 +292,7 @@ impl Composed {
 }
 
 struct ComposedItem {
-    src: Source,
+    src: Option<Source>,
     path: PathBuf,
     id: String,
     media_type: MediaType,
@@ -272,7 +305,19 @@ impl ComposedItem {
         let id = format!("{}{}", media_type.to_string(), len);
 
         Ok(Self {
-            src: src.clone(),
+            src: Some(src.clone()),
+            path: path.clone(),
+            id,
+            media_type,
+            properties: Vec::new(),
+        })
+    }
+    fn without_src(path: &PathBuf, len: usize) -> RepubResult<Self> {
+        let media_type = MediaType::try_from(path)?;
+        let id = format!("{}{}", media_type.to_string(), len);
+
+        Ok(Self {
+            src: None,
             path: path.clone(),
             id,
             media_type,
