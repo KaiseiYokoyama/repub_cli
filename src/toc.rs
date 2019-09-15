@@ -21,7 +21,7 @@ impl TableOfContents {
 
         OL {
             elems: li_vec,
-            hidden: level <= min_level,
+            hidden: level >= min_level,
         }
     }
 
@@ -105,7 +105,7 @@ pub trait ToCItemTrait {
             .map(|item| item.to_xhtml_elem(min_level, navigation_path))
             .collect::<Vec<Box<dyn Elem>>>();
 
-        let mut ol = OL { elems: li_vec, hidden: self.level() <= min_level };
+        let mut ol = OL { elems: li_vec, hidden: self.level() >= min_level };
         li.push(Box::new(ol));
 
         Box::new(li)
