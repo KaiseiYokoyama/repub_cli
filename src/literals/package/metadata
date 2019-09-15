@@ -1,0 +1,7 @@
+<metadata>
+    <dc:title>{title}</dc:title>
+    <dc:language>{language}</dc:language>
+    <dc:creator>{creator}</dc:creator>
+    <dc:identifier id="BookId">{book_id}</dc:identifier>
+    <meta property="dcterms:modified">{last_mod}</meta>
+</metadata>

@@ -231,7 +231,7 @@ impl Composer {
         let h1_title = "目次";
 
         // スタイルシートへの<link>要素を生成
-        let style_xhtml = self.composed.styles_links(&to);
+        let style_xhtml = self.composed.styles_links(&path);
 
         // 目次要素を生成
         let toc = self.toc.to_xhtml(self.data.cfg.min_toc_level, &path);
@@ -247,8 +247,106 @@ impl Composer {
         std::fs::File::create(&path)?.write_all(xhtml.as_bytes())?;
 
         // composedに登録
-        let composed = ComposedItem::without_src(&path, 0)?;
+        let mut composed = ComposedItem::without_src(&path, 0)?;
+        composed.properties.push(Properties::Nav);
         self.composed.contents.push(composed);
+
+        // todo ログ出力
+
+        Ok(self)
+    }
+
+    /// self.composed を参照して, package.opf を生成する
+    /// compose_css -> compose_static -> compose_contents -> compose_nav -> *compose_opf*
+    pub fn compose_opf(&mut self) -> RepubResult<&mut Self> {
+        use chrono::prelude::*;
+
+        let path = self.tmp_dir.oebps.path.join("package.opf");
+
+        let metadata = format!(
+            include_str!("literals/package/metadata"),
+            title = self.data.cfg.title.clone(),
+            language = self.data.cfg.language.clone(),
+            creator = self.data.cfg.creator.clone(),
+            book_id = self.data.cfg.book_id.clone(),
+            last_mod = Utc::now()
+                .format("%Y-%m-%dT%H:%M:%SZ")
+                .to_string()
+                .replace("\"", ""),
+        );
+
+        let manifest_str = {
+            let items_str = self.composed.contents
+                .iter()
+                .chain(
+                    self.composed.style_items.iter()
+                )
+                .chain(
+                    self.composed.static_items.iter()
+                )
+                .map(|ci| {
+                    ci.as_manifest_item(&path)
+                })
+                .collect::<Vec<String>>()
+                .join("\n");
+
+            format!(
+                include_str!("literals/package/manifest"),
+                items_str = items_str,
+            )
+        };
+
+        // todo 並びの変更, カバー画像
+        let spine_str = {
+            let navs = {
+                let mut navs = vec![];
+                let mut navs_index = vec![];
+                for (index, content) in self.composed.contents.iter().enumerate() {
+                    if content.properties.contains(&Properties::Nav) {
+                        navs_index.push(index);
+                    }
+                }
+
+                navs_index.reverse();
+
+                for index in navs_index {
+                    navs.push(self.composed.contents.remove(index));
+                }
+
+                navs.sort_by(|a, b| a.id.cmp(&b.id));
+
+                navs
+            };
+
+            // ソート
+            self.composed.contents
+                .sort_by(|a, b| a.id.cmp(&b.id));
+            // navsを頭に挿入
+            for (index, nav) in navs.into_iter().enumerate() {
+                self.composed.contents.insert(index, nav);
+            }
+
+            let items_str = self.composed.contents
+                .iter()
+                .map(|ci| ci.as_spine_item())
+                .collect::<Vec<String>>()
+                .join("\n");
+
+            format!(
+                include_str!("literals/package/spine"),
+                items_str = items_str,
+            )
+        };
+
+        let xhtml = format!(
+            include_str!("literals/package/package.opf"),
+            &metadata,
+            &manifest_str,
+            &spine_str
+        );
+
+        // 書き込み
+        std::fs::File::create(&path)?.write_all(xhtml.as_bytes())?;
 
         // todo ログ出力
 
@@ -257,7 +355,7 @@ impl Composer {
 
     /// すべてのファイルを(必要があれば)変換, 書き換えをして tmp directory に格納する
     pub fn compose(&mut self) -> RepubResult<()> {
-        self.compose_css()?.compose_static()?.compose_contents()?;
+        self.compose_css()?.compose_static()?.compose_contents()?.compose_nav()?.compose_opf()?;
         Ok(())
     }
 }
@@ -302,7 +400,11 @@ struct ComposedItem {
 impl ComposedItem {
     fn new(src: &Source, path: &PathBuf, len: usize) -> RepubResult<Self> {
         let media_type = MediaType::try_from(path)?;
-        let id = format!("{}{}", media_type.to_string(), len);
+        let id = format!("{}{}", {
+            let media_type = media_type.to_string();
+            let vec = media_type.split('/').collect::<Vec<&str>>();
+            vec[1].to_string()
+        }, len);
 
         Ok(Self {
             src: Some(src.clone()),
@@ -312,9 +414,14 @@ impl ComposedItem {
             properties: Vec::new(),
         })
     }
+
     fn without_src(path: &PathBuf, len: usize) -> RepubResult<Self> {
         let media_type = MediaType::try_from(path)?;
-        let id = format!("{}{}", media_type.to_string(), len);
+        let id = format!("{}{}", {
+            let media_type = media_type.to_string();
+            let vec = media_type.split('/').collect::<Vec<&str>>();
+            vec[1].to_string()
+        }, len);
 
         Ok(Self {
             src: None,
@@ -323,6 +430,39 @@ impl ComposedItem {
             media_type,
             properties: Vec::new(),
         })
+    }
+
+    fn as_manifest_item(&self, opf_path: &PathBuf) -> String {
+        let properties_str = if self.properties.is_empty() {
+            "".to_string()
+        } else {
+            format!(
+                " properties=\"{}\"",
+                self.properties
+                    .iter()
+                    .map(|p| p.to_string())
+                    .collect::<Vec<String>>()
+                    .join(" ")
+            )
+        };
+
+        let href = PathBuf::path_diff(opf_path, &self.path)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
+
+        format!(
+            "<item id=\"{}\" href=\"{}\" media-type=\"{}\"{} />",
+            &self.id,
+            href,
+            &self.media_type.to_string(),
+            &properties_str
+        )
+    }
+
+    fn as_spine_item(&self) -> String {
+        format!("<itemref idref=\"{}\" />", &self.id)
     }
 }
 
@@ -368,10 +508,10 @@ pub mod media_type {
     impl ToString for MediaType {
         fn to_string(&self) -> String {
             match self {
-                MediaType::Image(t) => t.to_string(),
-                MediaType::Application(t) => t.to_string(),
-                MediaType::Audio(t) => t.to_string(),
-                MediaType::Text(t) => t.to_string(),
+                MediaType::Image(t) => format!("image/{}", &t.to_string()),
+                MediaType::Application(t) => format!("application/{}", &t.to_string()),
+                MediaType::Audio(t) => format!("audio/{}", &t.to_string()),
+                MediaType::Text(t) => format!("text/{}", t.to_string()),
             }
         }
     }
@@ -525,7 +665,7 @@ pub mod media_type {
 
 pub mod properties {
     /// https://imagedrive.github.io/spec/epub30-publications.xhtml#sec-item-property-values
-    #[derive(Clone)]
+    #[derive(Clone, PartialEq)]
     pub enum Properties {
         /// cover-image プロパティは、出版物のカバーイメージとして説明され Publication Resource を識別する
         CoverImage,
