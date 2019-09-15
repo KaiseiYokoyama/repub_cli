@@ -25,6 +25,17 @@ impl TryFrom<InputData> for Composer {
     }
 }
 
+// todo --save オプション (一時ファイルを保存する)
+//impl Drop for Composer {
+//    fn drop(&mut self) {
+        // オブジェクトに対応する(一時)ディレクトリを削除する
+//        if (!self.data.cfg.save) {
+//            std::fs::remove_dir_all(&self.tmp_dir.path);
+//        }
+//    }
+//}
+
+
 impl Composer {
     /// css を tmp directoryに格納する
     /// *compose_css* -> compose_static -> compose_contents -> compose_nav -> compose_opf
