@@ -343,6 +343,7 @@ impl Composer {
 
             format!(
                 include_str!("literals/package/spine"),
+                ppd = PageProgressionDirection::from(&self.data.cfg.writing_mode).to_string(),
                 items_str = items_str,
             )
         };

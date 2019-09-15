@@ -2,7 +2,7 @@ use clap::ArgMatches;
 
 use crate::prelude::*;
 pub use source::Source;
-pub use config::Config;
+pub use config::{Config, WritingMode, PageProgressionDirection};
 
 /// 入力された情報(設定およびfile)
 #[derive(Debug)]
@@ -45,7 +45,7 @@ impl<'a> TryFrom<clap::ArgMatches<'a>> for Input {
 
 mod config {
     use super::*;
-    use writing_mode::WritingMode;
+    pub use writing_mode::{WritingMode, PageProgressionDirection};
 
     /// 出力設定
     #[derive(Serialize, Deserialize, Debug)]
@@ -170,6 +170,8 @@ mod config {
         use serde::{Serializer, Deserializer};
         use serde::de::Visitor;
 
+        pub use page_progression_direction::*;
+
         /// 書式
         ///  [参考](https://developer.mozilla.org/ja/docs/Web/CSS/writing-mode)
         #[derive(Debug)]
@@ -240,6 +242,42 @@ mod config {
             fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error> where
                 D: Deserializer<'de> {
                 deserializer.deserialize_str(WritingModeVisitor)
+            }
+        }
+
+        mod page_progression_direction {
+            use super::WritingMode;
+
+            pub enum PageProgressionDirection {
+                LtR,
+                RtL,
+                Default,
+            }
+
+            impl ToString for PageProgressionDirection {
+                fn to_string(&self) -> String {
+                    match self {
+                        PageProgressionDirection::LtR => "ltr",
+                        PageProgressionDirection::RtL => "rtl",
+                        PageProgressionDirection::Default => "default",
+                    }.to_string()
+                }
+            }
+
+            impl Default for PageProgressionDirection {
+                fn default() -> Self {
+                    PageProgressionDirection::Default
+                }
+            }
+
+            impl From<&WritingMode> for PageProgressionDirection {
+                fn from(mode: &WritingMode) -> Self {
+                    match mode {
+                        WritingMode::HorizontalTb => PageProgressionDirection::Default,
+                        WritingMode::VerticalLr => PageProgressionDirection::LtR,
+                        WritingMode::VerticalRl => PageProgressionDirection::RtL,
+                    }
+                }
             }
         }
     }
