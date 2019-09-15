@@ -26,14 +26,15 @@ impl TryFrom<InputData> for Composer {
 }
 
 // todo --save オプション (一時ファイルを保存する)
-//impl Drop for Composer {
-//    fn drop(&mut self) {
-// オブジェクトに対応する(一時)ディレクトリを削除する
+#[cfg(not(debug_assertions))]
+impl Drop for Composer {
+    fn drop(&mut self) {
 //        if (!self.data.cfg.save) {
-//            std::fs::remove_dir_all(&self.tmp_dir.path);
+            std::fs::remove_dir_all(&self.tmp_dir.path);
+        // todo ログ出力
 //        }
-//    }
-//}
+    }
+}
 
 
 impl Composer {
