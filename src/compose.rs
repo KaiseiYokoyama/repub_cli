@@ -98,7 +98,7 @@ impl Composer {
             Attribute,
         };
 
-        fn register_to(toc: &mut TableOfContents, xhtml: &String, path_buf: &PathBuf) {
+        fn register_to(toc: &mut TableOfContents, xhtml: &String, path_buf: &PathBuf) -> String {
             fn create_attribute(name: &str, value: &str) -> Attribute {
                 Attribute {
                     name: QualName::new(None, ns!(), LocalName::from(name)),
@@ -167,6 +167,10 @@ impl Composer {
                     _ => {}
                 }
             }
+
+            let mut bytes = vec![];
+            serialize(&mut bytes, &dom.document.children.borrow()[0], SerializeOpts::default()).unwrap();
+            String::from_utf8(bytes).unwrap()
         }
 
         for file in &self.data.files.content_files {
@@ -199,20 +203,8 @@ impl Composer {
                             comrak::markdown_to_html(&source_str, &options)
                         };
 
-                        // tocに登録
-                        register_to(&mut self.toc, &xhtml, &to);
-
-                        // xhtmlを整形
-                        let parser = parse_fragment(
-                            RcDom::default(),
-                            ParseOpts::default(),
-                            QualName::new(None, ns!(html), local_name!("body")),
-                            vec![],
-                        );
-                        let dom = parser.one(xhtml);
-                        let mut bytes = vec![];
-                        serialize(&mut bytes, &dom.document.children.borrow()[0], SerializeOpts::default()).unwrap();
-                        let xhtml = String::from_utf8(bytes).unwrap();
+                        // tocに登録, 整形
+                        let xhtml = register_to(&mut self.toc, &xhtml, &to);
 
                         // スタイルシートへの<link>要素を生成
                         let style_xhtml = self.composed.styles_links(&to);

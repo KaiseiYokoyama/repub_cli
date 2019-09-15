@@ -148,11 +148,18 @@ impl ToCItemTrait for ToCItem {
     fn to_a(&self, navigation_path: &PathBuf) -> Option<A> {
         Some(A {
             text: self.title.clone(),
-            href: PathBuf::path_diff(navigation_path, &self.path_buf)
-                .map(|p| p.to_str()
-                    .map(|s| s.to_string())
-                    .unwrap_or(String::new()))
-                .unwrap_or(String::new()),
+            href: {
+                let path
+                    = PathBuf::path_diff(navigation_path, &self.path_buf)
+                    .map(|p| {
+                        p.to_str()
+                            .map(|s| s.to_string())
+                            .unwrap_or_default()
+                    }).unwrap_or_default();
+                let id = self.id.clone().unwrap_or_default();
+
+                format!("{}#{}", &path, &id)
+            },
         })
     }
 }
