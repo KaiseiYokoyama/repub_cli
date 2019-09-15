@@ -19,6 +19,7 @@ pub mod message {
     pub mod error {
         use super::*;
 
+        /// Error: エラー, プログラムの停止に対する助言
         pub struct RepubError(pub String);
 
         impl AsRef<str> for RepubError {
@@ -47,6 +48,7 @@ pub mod message {
     pub mod warning {
         use super::*;
 
+        /// Warning: 警告, 意図しないプログラムの動作に対する助言
         pub struct RepubWarning(pub String);
 
         impl AsRef<str> for RepubWarning {

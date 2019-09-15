@@ -50,7 +50,7 @@ mod meta_inf {
 
             // container.xmlを書き込み
             let container_xml = path.join("container.xml");
-            File::open(container_xml)?.write_all(include_str!("literals/container.xml").as_bytes())?;
+            File::create(container_xml)?.write_all(include_str!("literals/container.xml").as_bytes())?;
 
             Ok(Self)
         }
