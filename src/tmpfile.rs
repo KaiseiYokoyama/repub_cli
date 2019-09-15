@@ -1,20 +1,20 @@
 use crate::prelude::*;
 
-use meta_inf::MetaInf;
-use oebps::OEBPS;
-use mimetype::Mimetype;
+pub use meta_inf::MetaInf;
+pub use oebps::OEBPS;
+pub use mimetype::Mimetype;
 
 const TMP_DIR_PATH_STR: &str = "repub_tmp";
 
 pub struct TmpDir {
     /// 一時ディレクトリのpath
-    path: PathBuf,
+    pub path: PathBuf,
     /// META-INF directory
-    meta_inf: MetaInf,
+    pub meta_inf: MetaInf,
     /// OEBPS directory
-    oebps: OEBPS,
+    pub oebps: OEBPS,
     /// mimetype
-    mimetype: Mimetype,
+    pub mimetype: Mimetype,
 }
 
 impl TmpDir {
@@ -41,7 +41,8 @@ mod meta_inf {
     use super::*;
     use std::fs::File;
 
-    pub struct MetaInf;
+    #[derive(Clone)]
+    pub struct MetaInf(pub PathBuf);
 
     impl MetaInf {
         pub fn new(tmpdir_path: &PathBuf) -> RepubResult<Self> {
@@ -50,9 +51,9 @@ mod meta_inf {
 
             // container.xmlを書き込み
             let container_xml = path.join("container.xml");
-            File::open(container_xml)?.write_all(include_str!("literals/container.xml").as_bytes())?;
+            File::create(container_xml)?.write_all(include_str!("literals/container.xml").as_bytes())?;
 
-            Ok(Self)
+            Ok(Self(path))
         }
     }
 }
@@ -63,6 +64,7 @@ mod oebps {
     pub struct OEBPS {
         /// OEBPS directory の path
         pub path: PathBuf,
+        pub package_opf: Option<PathBuf>,
     }
 
     impl OEBPS {
@@ -70,7 +72,7 @@ mod oebps {
             let path = tmpdir_path.join("OEBPS");
             std::fs::create_dir_all(&path)?;
 
-            Ok(Self { path })
+            Ok(Self { path, package_opf: None })
         }
     }
 }
@@ -79,16 +81,17 @@ mod mimetype {
     use super::*;
     use std::fs::File;
 
-    pub struct Mimetype;
+    #[derive(Clone)]
+    pub struct Mimetype(pub PathBuf);
 
     impl Mimetype {
         pub fn new(tmpdir_path: &PathBuf) -> RepubResult<Self> {
             let path = tmpdir_path.join("mimetype");
 
-            let mut mimetype = File::create(path)?;
+            let mut mimetype = File::create(&path)?;
             mimetype.write_all(include_str!("literals/mimetype").as_bytes())?;
 
-            Ok(Self)
+            Ok(Self(path))
         }
     }
 }

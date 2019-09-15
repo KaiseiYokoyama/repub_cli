@@ -1,15 +1,15 @@
 use crate::prelude::*;
 use crate::load::*;
 
-use files::Files;
+pub use files::*;
 
 #[derive(Debug)]
-pub struct Data {
-    cfg: Config,
-    files: Files,
+pub struct InputData {
+    pub cfg: Config,
+    pub files: Files,
 }
 
-impl From<Input> for Data {
+impl From<Input> for InputData {
     fn from(input: Input) -> Self {
         let Input { cfg, src } = input;
 
@@ -28,11 +28,11 @@ mod files {
     #[derive(Debug)]
     pub struct Files {
         /// 変換を必要とするファイル
-        content_files: Vec<ContentFile>,
+        pub content_files: Vec<ContentFile>,
         /// スタイルを指定するファイル
-        style_files: Vec<Source>,
+        pub style_files: Vec<Source>,
         /// その他、変換を必要としないファイル
-        static_files: Vec<Source>,
+        pub static_files: Vec<Source>,
     }
 
     impl From<Vec<Source>> for Files {
@@ -66,9 +66,9 @@ mod files {
     /// コンテンツ
     /// 変換を必要とするファイル
     #[derive(Debug)]
-    struct ContentFile {
-        src: Source,
-        convert_type: ConvertType,
+    pub struct ContentFile {
+        pub src: Source,
+        pub convert_type: ConvertType,
     }
 
     impl TryFrom<Source> for ContentFile {
@@ -92,7 +92,7 @@ mod files {
 
     /// 変換の種類
     #[derive(Debug)]
-    enum ConvertType {
+    pub enum ConvertType {
         MarkdownToXHTML,
     }
 }

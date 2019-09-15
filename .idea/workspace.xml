@@ -5,12 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="36f9786c-c2fe-44c1-9c17-54c2970a6915" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/compose.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/literals/container.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/literals/mimetype" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/tmpfile.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/compose.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/compose.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/toc.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/toc.rs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -79,7 +76,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Cargo Command.Run repub">
+  <component name="RunManager" selected="Cargo Command.travis script">
     <configuration name="Run repub" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="channel" value="DEFAULT" />
       <option name="command" value="run --package repub --bin repub test -h 1024" />
@@ -93,9 +90,48 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test load::load::test::app_to_input" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+    <configuration name="Test compose::scraper_edit_mem_replace" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="channel" value="DEFAULT" />
-      <option name="command" value="test --package repub --bin repub load::load::test::app_to_input -- --exact" />
+      <option name="command" value="test --package repub --bin repub compose::scraper_edit_mem_replace -- --exact --nocapture" />
+      <option name="allFeatures" value="false" />
+      <option name="nocapture" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test compose::test_html5ever" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="channel" value="DEFAULT" />
+      <option name="command" value="test --package repub --bin repub compose::test_html5ever -- --exact --nocapture" />
+      <option name="allFeatures" value="false" />
+      <option name="nocapture" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test toc::test" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="channel" value="DEFAULT" />
+      <option name="command" value="test --package repub --bin repub toc::test -- --exact --nocapture" />
+      <option name="allFeatures" value="false" />
+      <option name="nocapture" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test toc::xhtml_elem::test" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="channel" value="DEFAULT" />
+      <option name="command" value="test --package repub --bin repub toc::xhtml_elem::test -- --exact --nocapture" />
       <option name="allFeatures" value="false" />
       <option name="nocapture" value="false" />
       <option name="emulateTerminal" value="false" />
@@ -122,12 +158,18 @@
     <list>
       <item itemvalue="Cargo Command.travis script" />
       <item itemvalue="Cargo Command.Run repub" />
-      <item itemvalue="Cargo Command.Test load::load::test::app_to_input" />
+      <item itemvalue="Cargo Command.Test toc::xhtml_elem::test" />
+      <item itemvalue="Cargo Command.Test toc::test" />
+      <item itemvalue="Cargo Command.Test compose::test_html5ever" />
+      <item itemvalue="Cargo Command.Test compose::scraper_edit_mem_replace" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo Command.Test toc::test" />
+        <item itemvalue="Cargo Command.Test compose::test_html5ever" />
+        <item itemvalue="Cargo Command.Test compose::scraper_edit_mem_replace" />
+        <item itemvalue="Cargo Command.Test toc::xhtml_elem::test" />
         <item itemvalue="Cargo Command.Run repub" />
-        <item itemvalue="Cargo Command.Test load::load::test::app_to_input" />
       </list>
     </recent_temporary>
   </component>
@@ -147,7 +189,7 @@
       <updated>1568279011839</updated>
       <workItem from="1568279014492" duration="1065000" />
       <workItem from="1568281330506" duration="90000" />
-      <workItem from="1568281453583" duration="21632000" />
+      <workItem from="1568281453583" duration="58591000" />
     </task>
     <servers />
   </component>
