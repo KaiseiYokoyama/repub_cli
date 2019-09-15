@@ -73,7 +73,7 @@ impl Composer {
                     self.composed.static_items.push(composed);
                 }
                 Err(e) => {
-                    RepubWarning(format!("{}", &e)).print();
+                    RepubWarning(format!("{:?} : {}", &file.path, &e)).print();
                     continue;
                 }
             }
