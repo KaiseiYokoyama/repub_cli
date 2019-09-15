@@ -105,7 +105,7 @@ pub trait ToCItemTrait {
             .map(|item| item.to_xhtml_elem(min_level, navigation_path))
             .collect::<Vec<Box<dyn Elem>>>();
 
-        let mut ol = OL { elems: li_vec, hidden: self.level() >= min_level };
+        let ol = OL { elems: li_vec, hidden: self.level() >= min_level };
         li.push(Box::new(ol));
 
         Box::new(li)
@@ -195,6 +195,7 @@ impl ToCItemTrait for ToCDummyItem {
         true
     }
 
+    #[allow(unused_variables)]
     fn to_a(&self, navigation_path: &PathBuf) -> Option<A> {
         None
     }
@@ -276,6 +277,7 @@ mod xhtml_elem {
             format!("<a href=\"{}\">{}</a>", &self.href, &self.text)
         }
 
+        #[allow(unused_variables)]
         fn push(&mut self, elem: Box<dyn Elem>) {
             unimplemented!()
         }
@@ -289,7 +291,7 @@ mod xhtml_elem {
             elems: Vec::new(),
             hidden: false,
         };
-        for i in 0..3 {
+        for _ in 0..3 {
             let mut li = LI {
                 elems: Vec::new(),
             };
@@ -314,8 +316,8 @@ mod xhtml_elem {
 fn test() {
     let mut toc = TableOfContents::new();
 
-    for i in 0..5 {
-        let mut tocc = ToCItem {
+    for _ in 0..5 {
+        let tocc = ToCItem {
             items: Vec::new(),
             path_buf: PathBuf::from_str("ex/am/ple").unwrap(),
             id: Some(String::from_str("sample id").unwrap()),

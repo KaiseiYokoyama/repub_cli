@@ -88,7 +88,6 @@ impl Composer {
         use html5ever::{
             serialize,
             parse_fragment,
-            parse_document,
             ParseOpts,
             serialize::SerializeOpts,
             QualName,
@@ -122,8 +121,7 @@ impl Composer {
                 match child.data {
                     NodeData::Element {
                         ref name,
-                        ref attrs,
-                        ref template_contents, ..
+                        ref attrs, ..
                     } => {
                         let level = match name.local {
                             local_name!("h1") => 1,
@@ -393,7 +391,6 @@ impl Composer {
         };
 
         let mut writer = ZipWriter::new(epub);
-        let method = CompressionMethod::Deflated;
 
         fn write_file(slf: &mut Composer, writer: &mut ZipWriter<std::fs::File>, path: &PathBuf, compression_method: Option<CompressionMethod>) -> RepubResult<()> {
             let rel_path = PathBuf::path_diff(&slf.tmp_dir.path, path).unwrap();
@@ -482,6 +479,7 @@ impl Composed {
 }
 
 struct ComposedItem {
+    #[allow(dead_code)]
     src: Option<Source>,
     path: PathBuf,
     id: String,
@@ -750,6 +748,7 @@ pub mod media_type {
 pub mod properties {
     /// https://imagedrive.github.io/spec/epub30-publications.xhtml#sec-item-property-values
     #[derive(Clone, PartialEq)]
+    #[allow(dead_code)]
     pub enum Properties {
         /// cover-image プロパティは、出版物のカバーイメージとして説明され Publication Resource を識別する
         CoverImage,
