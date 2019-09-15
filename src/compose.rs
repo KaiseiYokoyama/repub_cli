@@ -28,7 +28,7 @@ impl TryFrom<InputData> for Composer {
 // todo --save オプション (一時ファイルを保存する)
 //impl Drop for Composer {
 //    fn drop(&mut self) {
-        // オブジェクトに対応する(一時)ディレクトリを削除する
+// オブジェクトに対応する(一時)ディレクトリを削除する
 //        if (!self.data.cfg.save) {
 //            std::fs::remove_dir_all(&self.tmp_dir.path);
 //        }
@@ -45,7 +45,7 @@ impl Composer {
             let to = self.tmp_dir.oebps.path.join(&relative_path);
 
             // epub3の対応している拡張子かどうかを確認する -> そうでなければreturn
-            let composed = ComposedItem::new(file, &to, self.composed.style_items.len())?;
+            let composed = ComposedItem::new(file, &to, "css", self.composed.style_items.len())?;
             // 対応している拡張子ならばcopy
             std::fs::copy(&file.path, &to)?;
             // todo ログ出力
@@ -64,12 +64,19 @@ impl Composer {
             let to = self.tmp_dir.oebps.path.join(&relative_path);
 
             // epub3の対応している拡張子かどうかを確認する -> そうでなければreturn
-            let composed = ComposedItem::new(file, &to, self.composed.static_items.len())?;
-            // 対応している拡張子ならばcopy
-            std::fs::copy(&file.path, &to)?;
-            // todo ログ出力
+            match ComposedItem::new(file, &to, "static", self.composed.static_items.len()) {
+                Ok(composed) => {
+                    // 対応している拡張子ならばcopy
+                    std::fs::copy(&file.path, &to)?;
+                    // todo ログ出力
 
-            self.composed.static_items.push(composed);
+                    self.composed.static_items.push(composed);
+                }
+                Err(e) => {
+                    RepubWarning(format!("{}", &e)).print();
+                    continue;
+                }
+            }
         }
 
         Ok(self)
@@ -223,7 +230,7 @@ impl Composer {
 
                         // todo ログ出力
 
-                        ComposedItem::new(&file.src, &to, self.composed.contents.len())?
+                        ComposedItem::new(&file.src, &to, "contents", self.composed.contents.len())?
                     }
                 };
 
@@ -258,7 +265,7 @@ impl Composer {
         std::fs::File::create(&path)?.write_all(xhtml.as_bytes())?;
 
         // composedに登録
-        let mut composed = ComposedItem::without_src(&path, 0)?;
+        let mut composed = ComposedItem::without_src(&path, "navigation", 0)?;
         composed.properties.push(Properties::Nav);
         self.composed.contents.push(composed);
 
@@ -359,6 +366,10 @@ impl Composer {
         // 書き込み
         std::fs::File::create(&path)?.write_all(xhtml.as_bytes())?;
 
+        // zippingに備えてpathbufを保存
+        let package_opf = Some(path);
+        self.tmp_dir.oebps.package_opf = package_opf;
+
         // todo ログ出力
 
         Ok(self)
@@ -367,6 +378,84 @@ impl Composer {
     /// すべてのファイルを(必要があれば)変換, 書き換えをして tmp directory に格納する
     pub fn compose(&mut self) -> RepubResult<()> {
         self.compose_css()?.compose_static()?.compose_contents()?.compose_nav()?.compose_opf()?;
+
+        if cfg!(target_os = "macos") {
+            self.zip()?;
+        }
+
+        Ok(())
+    }
+
+    pub fn zip(&mut self) -> RepubResult<()> {
+        use zip::{CompressionMethod, write::{FileOptions, ZipWriter}};
+
+        let epub_path = PathBuf::from(&format!("{}.epub", &self.data.cfg.title.clone()));
+        let epub = match std::fs::File::create(&epub_path) {
+            Ok(file) => {
+                file
+            }
+            Err(_) => {
+                std::fs::remove_file(&epub_path)?;
+                std::fs::File::create(&epub_path)?
+            }
+        };
+
+        let mut writer = ZipWriter::new(epub);
+        let method = CompressionMethod::Deflated;
+
+        fn write_file(slf: &mut Composer, writer: &mut ZipWriter<std::fs::File>, path: &PathBuf, compression_method: Option<CompressionMethod>) -> RepubResult<()> {
+            let rel_path = PathBuf::path_diff(&slf.tmp_dir.path, path).unwrap();
+
+            writer.start_file(rel_path.to_str().unwrap(),
+                              FileOptions::default().compression_method(
+                                  if let Some(method) = compression_method {
+                                      method
+                                  } else { CompressionMethod::Deflated }))?;
+
+            writer.write(std::fs::read_to_string(path)?.as_bytes())?;
+
+            // todo ログ出力
+
+            Ok(())
+        }
+
+        fn write_dir(slf: &mut Composer, writer: &mut ZipWriter<std::fs::File>, path: &PathBuf) -> RepubResult<()> {
+            let rel_path = PathBuf::path_diff(&slf.tmp_dir.path, path).unwrap();
+
+            writer.add_directory_from_path(rel_path.as_path(),
+                                           FileOptions::default().compression_method(CompressionMethod::Deflated))?;
+
+            let mut dirs = vec![];
+
+            for entry in std::fs::read_dir(path)? {
+                let path = entry?.path();
+                if path.is_file() {
+                    write_file(slf, writer, &path, None)?;
+                } else {
+                    // directory の処理は, 直下の file の処理が終わったあと
+                    dirs.push(path);
+                }
+            }
+
+            for dir in dirs {
+                write_dir(slf, writer, &dir)?;
+            }
+
+            Ok(())
+        }
+
+        // mimetype 書き込み
+        let Mimetype(mimetype) = self.tmp_dir.mimetype.clone();
+        write_file(self, &mut writer, &mimetype, Some(CompressionMethod::Stored))?;
+
+        // META-INF 書き込み
+        let MetaInf(meta_inf) = self.tmp_dir.meta_inf.clone();
+        write_dir(self, &mut writer, &meta_inf)?;
+
+        // OEBPS 書き込み
+        let oebps = self.tmp_dir.oebps.path.clone();
+        write_dir(self, &mut writer, &oebps)?;
+
         Ok(())
     }
 }
@@ -409,13 +498,9 @@ struct ComposedItem {
 }
 
 impl ComposedItem {
-    fn new(src: &Source, path: &PathBuf, len: usize) -> RepubResult<Self> {
+    fn new(src: &Source, path: &PathBuf, namespace: &str, len: usize) -> RepubResult<Self> {
         let media_type = MediaType::try_from(path)?;
-        let id = format!("{}{}", {
-            let media_type = media_type.to_string();
-            let vec = media_type.split('/').collect::<Vec<&str>>();
-            vec[1].to_string()
-        }, len);
+        let id = format!("{}{}", namespace, len);
 
         Ok(Self {
             src: Some(src.clone()),
@@ -426,13 +511,9 @@ impl ComposedItem {
         })
     }
 
-    fn without_src(path: &PathBuf, len: usize) -> RepubResult<Self> {
+    fn without_src(path: &PathBuf, namespace: &str, len: usize) -> RepubResult<Self> {
         let media_type = MediaType::try_from(path)?;
-        let id = format!("{}{}", {
-            let media_type = media_type.to_string();
-            let vec = media_type.split('/').collect::<Vec<&str>>();
-            vec[1].to_string()
-        }, len);
+        let id = format!("{}{}", namespace, len);
 
         Ok(Self {
             src: None,
@@ -506,7 +587,7 @@ pub mod media_type {
                 .or(
                     TextType::from_str(s).ok().map(|t| MediaType::Text(t))
                 )
-                .ok_or(format_err!("{}",RepubError(format!("EPUB3は拡張子 {} に対応していません",s))))
+                .ok_or(format_err!("EPUB3は拡張子 {} に対応していません",s))
         }
     }
 
@@ -594,7 +675,7 @@ pub mod media_type {
 
         fn from_str(s: &str) -> Result<Self, Self::Err> {
             match s {
-                "xhtml" | "xht" | "html" | "htm" => Ok(ApplicationType::XHTML),
+                "xhtml" | "xht" => Ok(ApplicationType::XHTML),
                 "otf" | "otc" | "ttf" | "ttc" => Ok(ApplicationType::OpenType),
                 "woff" | "woff2" => Ok(ApplicationType::WOFF),
                 "smil" => Ok(ApplicationType::MediaOverlays),
@@ -640,8 +721,8 @@ pub mod media_type {
     impl ToString for AudioType {
         fn to_string(&self) -> String {
             match self {
-                AudioType::MPEG => "audio/mpeg",
-                AudioType::MP4 => "audio/mp4",
+                AudioType::MPEG => "mpeg",
+                AudioType::MP4 => "mp4",
             }.to_string()
         }
     }
@@ -667,8 +748,8 @@ pub mod media_type {
     impl ToString for TextType {
         fn to_string(&self) -> String {
             match self {
-                TextType::CSS => "text/css",
-                TextType::JS => "text/javascript",
+                TextType::CSS => "css",
+                TextType::JS => "javascript",
             }.to_string()
         }
     }

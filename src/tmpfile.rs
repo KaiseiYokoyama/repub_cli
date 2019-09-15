@@ -41,7 +41,8 @@ mod meta_inf {
     use super::*;
     use std::fs::File;
 
-    pub struct MetaInf;
+    #[derive(Clone)]
+    pub struct MetaInf(pub PathBuf);
 
     impl MetaInf {
         pub fn new(tmpdir_path: &PathBuf) -> RepubResult<Self> {
@@ -52,7 +53,7 @@ mod meta_inf {
             let container_xml = path.join("container.xml");
             File::create(container_xml)?.write_all(include_str!("literals/container.xml").as_bytes())?;
 
-            Ok(Self)
+            Ok(Self(path))
         }
     }
 }
@@ -63,6 +64,7 @@ mod oebps {
     pub struct OEBPS {
         /// OEBPS directory の path
         pub path: PathBuf,
+        pub package_opf: Option<PathBuf>,
     }
 
     impl OEBPS {
@@ -70,7 +72,7 @@ mod oebps {
             let path = tmpdir_path.join("OEBPS");
             std::fs::create_dir_all(&path)?;
 
-            Ok(Self { path })
+            Ok(Self { path, package_opf: None })
         }
     }
 }
@@ -79,16 +81,17 @@ mod mimetype {
     use super::*;
     use std::fs::File;
 
-    pub struct Mimetype;
+    #[derive(Clone)]
+    pub struct Mimetype(pub PathBuf);
 
     impl Mimetype {
         pub fn new(tmpdir_path: &PathBuf) -> RepubResult<Self> {
             let path = tmpdir_path.join("mimetype");
 
-            let mut mimetype = File::create(path)?;
+            let mut mimetype = File::create(&path)?;
             mimetype.write_all(include_str!("literals/mimetype").as_bytes())?;
 
-            Ok(Self)
+            Ok(Self(path))
         }
     }
 }
