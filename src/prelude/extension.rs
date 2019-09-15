@@ -1,6 +1,6 @@
 use std::path::{PathBuf, Path};
 
-pub type RepubResult<T> = Result<T,failure::Error>;
+pub type RepubResult<T> = Result<T, failure::Error>;
 
 pub trait PathDiff {
     fn path_diff<T>(from: &T, to: &T) -> Option<PathBuf>
@@ -9,7 +9,12 @@ pub trait PathDiff {
         use std::path::*;
 
         let path: &Path = to.as_ref();
-        let base: &Path = from.as_ref();
+        let base: &Path = {
+            let path: &Path = from.as_ref();
+            if path.is_file() {
+                path.parent().unwrap()
+            } else { path }
+        };
 
         if path.is_absolute() != base.is_absolute() {
             if path.is_absolute() {
@@ -44,7 +49,7 @@ pub trait PathDiff {
                     }
                 }
             }
-            Some(comps.iter().map(|c| c.as_os_str()).collect())
+            Some(comps.iter().map(|c| c.as_os_str()).collect::<PathBuf>())
         }
     }
 }
