@@ -51,7 +51,8 @@ impl Composer {
             let composed = ComposedItem::new(file, &to, "css", self.composed.style_items.len())?;
             // 対応している拡張子ならばcopy
             std::fs::copy(&file.path, &to)?;
-            // todo ログ出力
+            // ログ出力
+            RepubLog::packed(&format!("{:?}",&relative_path)).print();
 
             self.composed.style_items.push(composed);
         }
@@ -71,7 +72,8 @@ impl Composer {
                 Ok(composed) => {
                     // 対応している拡張子ならばcopy
                     std::fs::copy(&file.path, &to)?;
-                    // todo ログ出力
+                    // ログ出力
+                    RepubLog::packed(&format!("{:?}",&relative_path)).print();
 
                     self.composed.static_items.push(composed);
                 }
