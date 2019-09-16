@@ -1,6 +1,6 @@
 # repub [![Build Status](https://travis-ci.com/KaiseiYokoyama/repub.svg?branch=master)](https://travis-ci.com/KaiseiYokoyama/repub)
-![cover_image](https://user-images.githubusercontent.com/8509057/64936464-0ce98980-d891-11e9-97f9-72925653c4ba.png)
 markdown 文書を 電子書籍 (epub3) に変換します。
+![cover_image](https://user-images.githubusercontent.com/8509057/64936464-0ce98980-d891-11e9-97f9-72925653c4ba.png)
 
 ## Install
 ```bash
