@@ -622,9 +622,9 @@ pub mod media_type {
 
         fn try_from(value: &PathBuf) -> Result<Self, Self::Error> {
             let ext = value.extension().ok_or(
-                format_err!("{}",RepubError(format!("Failed to unwrap Option<&OsStr> on {}:{}",line!(),column!())))
+                format_err!("Failed to unwrap Option<&OsStr> on {}:{}:{}",file!(),line!(),column!())
             )?.to_str().ok_or(
-                format_err!("{}",RepubError(format!("Failed to unwrap Option<&str> on {}:{}",line!(),column!())))
+                format_err!("Failed to unwrap Option<&str> on {}:{}:{}",file!(),line!(),column!())
             )?;
 
             Ok(MediaType::from_str(&ext)?)
@@ -878,6 +878,12 @@ fn test_html5ever() {
     println!("{}", String::from_utf8(bytes).unwrap());
 
     assert_eq!(1, 1)
+}
+
+/// exec with --nocapture
+#[test]
+fn test_print_failure_err() {
+    println!("{}", format_err!("This is err!"));
 }
 
 // exec with --nocapture
