@@ -187,9 +187,9 @@ impl Composer {
             let composed =
                 match file.convert_type {
                     ConvertType::MarkdownToXHTML => {
+                        let relative_path = PathBuf::path_diff(&self.data.cfg.target, &file.src.path).unwrap();
                         let to = {
-                            let relative_path = PathBuf::path_diff(&self.data.cfg.target, &file.src.path).unwrap();
-                            let mut to_xhtml = self.tmp_dir.oebps.path.join(relative_path);
+                            let mut to_xhtml = self.tmp_dir.oebps.path.join(&relative_path);
                             to_xhtml.set_extension("xhtml");
                             to_xhtml
                         };
@@ -230,7 +230,8 @@ impl Composer {
                         // 書き込み
                         std::fs::File::create(&to)?.write_all(xhtml.as_bytes())?;
 
-                        // todo ログ出力
+                        // ログ出力
+                        RepubLog::converted(&format!("{:?}",relative_path)).print();
 
                         ComposedItem::new(&file.src, &to, "contents", self.composed.contents.len())?
                     }
