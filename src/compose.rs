@@ -468,6 +468,9 @@ impl Composer {
 
         writer.finish()?;
 
+        // ログ出力
+        RepubLog::published(&format!("📚 {:?}",&epub_path)).print();
+        
         Ok(())
     }
 }
