@@ -1,4 +1,5 @@
-# repub [![Build Status](https://travis-ci.com/KaiseiYokoyama/repub.svg?branch=master)](https://travis-ci.com/KaiseiYokoyama/repub)
+# repub [![Build Status](https://travis-ci.com/KaiseiYokoyama/repub.svg?branch=master)](https://travis-ci.com/KaiseiYokoyama/repub) [![dependency status](https://deps.rs/repo/github/KaiseiYokoyama/repub/status.svg)](https://deps.rs/repo/github/KaiseiYokoyama/repub) ![GitHub](https://img.shields.io/github/license/KaiseiYokoyama/repub)
+
 markdown 文書を 電子書籍 (epub3) に変換します。
 ![cover_image](https://user-images.githubusercontent.com/8509057/64936464-0ce98980-d891-11e9-97f9-72925653c4ba.png)
 
