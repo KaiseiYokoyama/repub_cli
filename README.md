@@ -17,6 +17,8 @@ cargo uninstall repub
 ```
 
 ## Usage
+[usage.md](examples/usage/usage.md)を御覧ください。
+
 ```
 $ repub --help
 repub 0.1.0
