@@ -30,7 +30,9 @@ impl TryFrom<InputData> for Composer {
 impl Drop for Composer {
     fn drop(&mut self) {
 //        if (!self.data.cfg.save) {
+        if cfg!(target_os = "macos") {
             std::fs::remove_dir_all(&self.tmp_dir.path);
+        }
         // todo ログ出力
 //        }
     }
