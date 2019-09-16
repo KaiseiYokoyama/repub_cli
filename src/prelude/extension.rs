@@ -13,7 +13,7 @@ pub trait PathDiff {
             let path: &Path = from.as_ref();
 
             // path.is_file() では、未作成のファイルへの path に対して true が帰ってこない
-            // extensionの ない file も存在はするが、 EPUB3 においては不正扱いなので無視
+            // extensionの ない file も存在はするが, EPUB3 においては不正扱いなので無視
             if path.extension().is_some() {
                 path.parent().unwrap()
             } else { path }
