@@ -11,7 +11,10 @@ pub trait PathDiff {
         let path: &Path = to.as_ref();
         let base: &Path = {
             let path: &Path = from.as_ref();
-            if path.is_file() {
+
+            // path.is_file() では、未作成のファイルへの path に対して true が帰ってこない
+            // extensionの ない file も存在はするが、 EPUB3 においては不正扱いなので無視
+            if path.extension().is_some() {
                 path.parent().unwrap()
             } else { path }
         };
@@ -49,7 +52,9 @@ pub trait PathDiff {
                     }
                 }
             }
-            Some(comps.iter().map(|c| c.as_os_str()).collect::<PathBuf>())
+            let some = comps.iter().map(|c| c.as_os_str()).collect::<PathBuf>();
+//            println!("from:{:?} to:{:?} rel:{:?}", &base, &path, &some);
+            Some(some)
         }
     }
 }

@@ -1,7 +1,7 @@
 [package]
 name = "repub"
 version = "0.1.0"
-authors = ["crome <crome110mine@gmail.com>"]
+authors = ["Kaisei Yokoyama <yokoyama.kaisei.sm@alumni.tsukuba.ac.jp>"]
 edition = "2018"
 description = "convert markdown(s) to epub"
 license = "MIT"
