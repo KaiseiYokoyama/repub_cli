@@ -1,4 +1,4 @@
-# repub
+# repub [![Build Status](https://travis-ci.com/KaiseiYokoyama/repub.svg?branch=master)](https://travis-ci.com/KaiseiYokoyama/repub)
 markdown 文書を 電子書籍 (epub3) に変換します。
 
 ## Install
