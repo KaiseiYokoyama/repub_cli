@@ -16,7 +16,17 @@ extern crate html5ever;
 
 use crate::{prelude::*, load::*, data::*, compose::*};
 
-fn main() -> RepubResult<()> {
+fn main() {
+    if let Err(e) = run() {
+        if cfg!(debug_assertions) {
+            RepubError(format!("{:?}", &e)).print();
+        } else {
+            RepubError(format!("{}", &e)).print();
+        }
+    }
+}
+
+fn run() -> RepubResult<()> {
     let app = crate::app::app();
 
     let input = Input::try_from(app.get_matches())?;
