@@ -285,6 +285,7 @@ mod config {
 
 mod source {
     use super::*;
+    use std::fs::DirEntry;
 
     #[derive(Debug, Clone)]
     pub struct Source {
@@ -299,9 +300,14 @@ mod source {
                 return Ok(vec![Self::try_from(value)?]);
             }
 
+            let mut entries
+                = std::fs::read_dir(value)?
+                .flat_map(|e| e)
+                .collect::<Vec<DirEntry>>();
+            entries.sort_by_key(|e| e.path());
+
             let mut vec = Vec::new();
-            for entry in std::fs::read_dir(value)? {
-                let entry = entry?;
+            for entry in entries {
                 let path = entry.path();
 
                 vec.append(&mut Self::try_from_path_buf(&path)?);
