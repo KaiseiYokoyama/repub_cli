@@ -424,7 +424,8 @@ impl Composer {
             writer.write_all(bytes.as_slice())?;
             writer.flush()?;
 
-            // todo ログ出力
+            // ログ出力
+            RepubLog::zipped(&format!("{:?}",&rel_path)).print();
 
             Ok(())
         }
@@ -470,7 +471,7 @@ impl Composer {
 
         // ログ出力
         RepubLog::published(&format!("📚 {:?}",&epub_path)).print();
-        
+
         Ok(())
     }
 }
