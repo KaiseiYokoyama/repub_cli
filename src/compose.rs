@@ -173,14 +173,11 @@ impl Composer {
             serialize(&mut bytes, &dom.document.children.borrow()[0], SerializeOpts::default()).unwrap();
             let xhtml = String::from_utf8(bytes).unwrap();
             // domをhtmlに変換しているので、xhtmlとは文法の合わない箇所がある
-            // <br> -> <br />
-            let xhtml = xhtml.replace("<br>", "<br />");
-            // <img src="image.png" alt="image"> ->  <img src="image.png" alt="image" />
             let peaces: Vec<&str> = xhtml.split('<').collect();
             peaces.into_iter().map(|s| {
-                        if s.starts_with("img") {
-                            s.replacen(">", " />", 1)
-                        } else { s.to_string() }
+                if s.starts_with("img") || s.starts_with("br") || s.starts_with("hr"){
+                    s.replacen(">", " />", 1)
+                } else { s.to_string() }
             }).collect::<Vec<String>>().join("<")
         }
 
