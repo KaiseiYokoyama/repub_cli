@@ -32,8 +32,8 @@ impl Drop for Composer {
 //        if (!self.data.cfg.save) {
         if cfg!(target_os = "macos") {
             std::fs::remove_dir_all(&self.tmp_dir.path);
+            RepubLog::removed(format!("Temporary files: {}",&self.tmp_dir.path));
         }
-        // todo ログ出力
 //        }
     }
 }
