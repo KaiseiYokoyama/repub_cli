@@ -372,10 +372,11 @@ impl Composer {
         std::fs::File::create(&path)?.write_all(xhtml.as_bytes())?;
 
         // zippingに備えてpathbufを保存
-        let package_opf = Some(path);
+        let package_opf = Some(path.clone());
         self.tmp_dir.oebps.package_opf = package_opf;
 
-        // todo ログ出力
+        // ログ出力
+        RepubLog::packed(&format!("{:?}", PathBuf::path_diff(&self.tmp_dir.path,&path).unwrap())).print();
 
         Ok(self)
     }
