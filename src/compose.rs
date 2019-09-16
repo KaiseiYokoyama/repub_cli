@@ -32,7 +32,7 @@ impl Drop for Composer {
 //        if (!self.data.cfg.save) {
         if cfg!(target_os = "macos") {
             std::fs::remove_dir_all(&self.tmp_dir.path);
-            RepubLog::removed(format!("Temporary files: {}",&self.tmp_dir.path));
+            RepubLog::removed(format!("Temporary files: {}", &self.tmp_dir.path));
         }
 //        }
     }
@@ -52,7 +52,7 @@ impl Composer {
             // 対応している拡張子ならばcopy
             std::fs::copy(&file.path, &to)?;
             // ログ出力
-            RepubLog::packed(&format!("{:?}",&relative_path)).print();
+            RepubLog::packed(&format!("{:?}", &relative_path)).print();
 
             self.composed.style_items.push(composed);
         }
@@ -73,7 +73,7 @@ impl Composer {
                     // 対応している拡張子ならばcopy
                     std::fs::copy(&file.path, &to)?;
                     // ログ出力
-                    RepubLog::packed(&format!("{:?}",&relative_path)).print();
+                    RepubLog::packed(&format!("{:?}", &relative_path)).print();
 
                     self.composed.static_items.push(composed);
                 }
@@ -159,13 +159,20 @@ impl Composer {
                                 items: Vec::new(),
                                 path_buf,
                                 id,
-                                title,
+                                title: title.clone(),
                                 level,
                             }
                         };
                         toc.push(Box::new(toc_item));
 
-                        // todo ログ出力
+                        // ログ出力
+                        RepubLog::indexed(
+                            &format!("{} {}",
+                                     &title,
+                                     path_buf.file_name()
+                                         .map(|e| e.to_str().unwrap_or_default())
+                                         .unwrap_or_default()
+                            )).print();
                     }
                     _ => {}
                 }
@@ -174,10 +181,11 @@ impl Composer {
             let mut bytes = vec![];
             serialize(&mut bytes, &dom.document.children.borrow()[0], SerializeOpts::default()).unwrap();
             let xhtml = String::from_utf8(bytes).unwrap();
+
             // domをhtmlに変換しているので、xhtmlとは文法の合わない箇所がある
             let peaces: Vec<&str> = xhtml.split('<').collect();
             peaces.into_iter().map(|s| {
-                if s.starts_with("img") || s.starts_with("br") || s.starts_with("hr"){
+                if s.starts_with("img") || s.starts_with("br") || s.starts_with("hr") {
                     s.replacen(">", " />", 1)
                 } else { s.to_string() }
             }).collect::<Vec<String>>().join("<")
@@ -231,7 +239,7 @@ impl Composer {
                         std::fs::File::create(&to)?.write_all(xhtml.as_bytes())?;
 
                         // ログ出力
-                        RepubLog::converted(&format!("{:?}",relative_path)).print();
+                        RepubLog::converted(&format!("{:?}", relative_path)).print();
 
                         ComposedItem::new(&file.src, &to, "contents", self.composed.contents.len())?
                     }
@@ -273,7 +281,7 @@ impl Composer {
         self.composed.contents.push(composed);
 
         // ログ出力
-        RepubLog::packed(&format!("{:?}", PathBuf::path_diff(&self.tmp_dir.path,&path).unwrap())).print();
+        RepubLog::packed(&format!("{:?}", PathBuf::path_diff(&self.tmp_dir.path, &path).unwrap())).print();
 
         Ok(self)
     }
@@ -376,7 +384,7 @@ impl Composer {
         self.tmp_dir.oebps.package_opf = package_opf;
 
         // ログ出力
-        RepubLog::packed(&format!("{:?}", PathBuf::path_diff(&self.tmp_dir.path,&path).unwrap())).print();
+        RepubLog::packed(&format!("{:?}", PathBuf::path_diff(&self.tmp_dir.path, &path).unwrap())).print();
 
         Ok(self)
     }
@@ -425,7 +433,7 @@ impl Composer {
             writer.flush()?;
 
             // ログ出力
-            RepubLog::zipped(&format!("{:?}",&rel_path)).print();
+            RepubLog::zipped(&format!("{:?}", &rel_path)).print();
 
             Ok(())
         }
@@ -470,7 +478,7 @@ impl Composer {
         writer.finish()?;
 
         // ログ出力
-        RepubLog::published(&format!("📚 {:?}",&epub_path)).print();
+        RepubLog::published(&format!("📚 {:?}", &epub_path)).print();
 
         Ok(())
     }
