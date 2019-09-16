@@ -108,6 +108,10 @@ pub mod message {
                 Self(RepubLogStatus::Converted, to_string.to_string())
             }
 
+            pub fn indexed<T: ToString>(to_string: &T) -> Self {
+                Self(RepubLogStatus::Indexed, to_string.to_string())
+            }
+
             pub fn zipped<T: ToString>(to_string: &T) -> Self {
                 Self(RepubLogStatus::Zipped, to_string.to_string())
             }
@@ -128,6 +132,8 @@ pub mod message {
             Packed,
             /// 変換が必要なファイルを変換してtmp_dirに格納した
             Converted,
+            /// ヘッダーを目次に追加した
+            Indexed,
             /// ファイルを変換して Zip アーカイブに追加した
             Zipped,
             /// EPUB の作成が完了した
@@ -146,6 +152,9 @@ pub mod message {
                     }
                     RepubLogStatus::Converted => {
                         format!("{:?}", &self).as_str().bright_green().bold()
+                    }
+                    RepubLogStatus::Indexed => {
+                        format!("{:?}", &self).as_str().cyan().bold()
                     }
                     RepubLogStatus::Zipped => {
                         format!("{:?}", &self).as_str().purple().bold()
