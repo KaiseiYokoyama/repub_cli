@@ -272,7 +272,8 @@ impl Composer {
         composed.properties.push(Properties::Nav);
         self.composed.contents.push(composed);
 
-        // todo ログ出力
+        // ログ出力
+        RepubLog::packed(&format!("{:?}", PathBuf::path_diff(&self.tmp_dir.path,&path).unwrap())).print();
 
         Ok(self)
     }
