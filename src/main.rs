@@ -20,10 +20,8 @@ fn main() -> RepubResult<()> {
     let app = crate::app::app();
 
     let input = Input::try_from(app.get_matches())?;
-    println!("{:?}", &input);
 
     let data = InputData::from(input);
-    println!("{:?}", &data);
 
     let mut composer = Composer::try_from(data)?;
     composer.compose()?;
