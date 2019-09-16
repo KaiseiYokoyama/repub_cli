@@ -405,7 +405,12 @@ impl Composer {
                                       method
                                   } else { CompressionMethod::Deflated }))?;
 
-            writer.write(std::fs::read_to_string(path)?.as_bytes())?;
+            let mut file = std::fs::File::open(&path)?;
+            let mut bytes = vec![];
+            file.read_to_end(&mut bytes)?;
+
+            writer.write_all(bytes.as_slice())?;
+            writer.flush()?;
 
             // todo ログ出力
 
@@ -448,6 +453,8 @@ impl Composer {
         // OEBPS 書き込み
         let oebps = self.tmp_dir.oebps.path.clone();
         write_dir(self, &mut writer, &oebps)?;
+
+        writer.finish()?;
 
         Ok(())
     }
