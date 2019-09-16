@@ -99,6 +99,28 @@ pub mod message {
             }
         }
 
+        impl RepubLog {
+            pub fn packed<T: ToString>(to_string: &T) -> Self {
+                Self(RepubLogStatus::Packed, to_string.to_string())
+            }
+
+            pub fn converted<T: ToString>(to_string: &T) -> Self {
+                Self(RepubLogStatus::Converted, to_string.to_string())
+            }
+
+            pub fn zipped<T: ToString>(to_string: &T) -> Self {
+                Self(RepubLogStatus::Zipped, to_string.to_string())
+            }
+
+            pub fn published<T: ToString>(to_string: &T) -> Self {
+                Self(RepubLogStatus::Published, to_string.to_string())
+            }
+
+            pub fn removed<T: ToString>(to_string: &T) -> Self {
+                Self(RepubLogStatus::Removed, to_string.to_string())
+            }
+        }
+
         /// Logの種類(作業の進み具合)
         #[derive(Debug, PartialEq)]
         pub enum RepubLogStatus {
