@@ -167,7 +167,8 @@ impl Composer {
 
                         // ログ出力
                         RepubLog::indexed(
-                            &format!("{} {}",
+                            &format!("{} {} ({})",
+                                     "#".repeat(level as usize),
                                      &title,
                                      path_buf.file_name()
                                          .map(|e| e.to_str().unwrap_or_default())
