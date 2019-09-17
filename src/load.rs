@@ -159,10 +159,7 @@ mod config {
 
             let verbose = value.is_present("verbose");
             if verbose {
-                println!("verbose");
                 std::env::set_var("RUST_LOG", "info");
-            } else {
-                println!("not verbose");
             }
 
             let save = value.is_present("save");

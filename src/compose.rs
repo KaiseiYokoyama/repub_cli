@@ -25,12 +25,50 @@ impl TryFrom<InputData> for Composer {
     }
 }
 
-#[cfg(not(debug_assertions))]
 impl Drop for Composer {
     fn drop(&mut self) {
+        fn output_cfg(cfg: &Config) -> RepubResult<()> {
+            // 設定ファイルの出力
+            if cfg.config {
+                let path = {
+                    let path = &cfg.target;
+                    let filename = "config.json";
+                    if path.is_file() {
+                        path.with_file_name(filename)
+                    } else if path.is_dir() {
+                        path.join(filename)
+                    } else {
+                        unreachable!()
+                    }
+                };
+
+                let json_str = serde_json::to_string(cfg)?;
+
+                let mut file = match std::fs::File::create(&path) {
+                    Ok(file) => file,
+                    Err(_) => {
+                        std::fs::remove_file(&path)?;
+                        std::fs::File::create(&path)?
+                    }
+                };
+
+                file.write_all(json_str.as_bytes())?;
+                file.flush()?;
+
+                RepubLog::config(&format!("Saved to {:?}",&path)).print();
+            }
+
+            Ok(())
+        }
+
+        // 一時ファイルの削除
         if (!self.data.cfg.save) && cfg!(target_os = "macos") {
             std::fs::remove_dir_all(&self.tmp_dir.path);
             RepubLog::removed(&format!("Temporary files: {:?}", &self.tmp_dir.path)).print();
+        }
+
+        if let Err(e) = output_cfg(&self.data.cfg) {
+            RepubError(format!("{}",e)).print();
         }
     }
 }
