@@ -62,6 +62,8 @@ mod config {
         /// 目次に表示するheaderの最低レベル
         /// 1を指定すればh1のみ、5以上を指定すればh1~h5の全てのheaderが目次に表示される
         pub min_toc_level: u8,
+        /// ログ表示するか否か
+        pub verbose: bool,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
@@ -151,6 +153,19 @@ mod config {
                 } else { 2 }
             };
 
+            let verbose = value.is_present("verbose");
+            if verbose {
+                println!("verbose");
+                std::env::set_var("RUST_LOG", "info");
+            } else {
+                println!("not verbose");
+            }
+
+            // logger を初期化
+            env_logger::Builder::from_default_env()
+                .format(|buf, record| writeln!(buf, "{}", record.args()))
+                .init();
+
             Ok(Self {
                 target,
                 writing_mode,
@@ -159,6 +174,7 @@ mod config {
                 language,
                 book_id,
                 min_toc_level,
+                verbose,
             })
         }
     }

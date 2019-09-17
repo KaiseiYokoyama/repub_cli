@@ -23,4 +23,7 @@ chrono = "0.4"
 html5ever = "0.24"
 zip = "0.5"
 serde = { version = "1.0", features = ["derive"] }
-colored = "1.8"
+#colored = "1.8"
+colored = { git = "https://github.com/tforgione/colored.git", branch = "master" }
+log = "0.4"
+env_logger = "0.6"

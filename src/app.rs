@@ -18,6 +18,10 @@ pub fn app<'a,'b>() -> App<'a,'b> {
         .arg(Arg::with_name("save_config_files")
             .help("設定ファイルを保存")
             .long("config"))
+        // ログを表示
+        .arg(Arg::with_name("verbose")
+            .help("ログを表示")
+            .long("verbose"))
         // タイトル
         .arg(Arg::with_name("title")
             .help("タイトルを設定")
