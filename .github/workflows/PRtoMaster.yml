@@ -14,9 +14,9 @@ jobs:
       matrix:
         rust: [stable]
     steps:
-    - uses: actions/checkout@v1
     - uses: hecrj/setup-rust-action@v1
       with:
         rust-version: ${{ matrix.rust }}
+    - uses: actions/checkout@v1
     - name: Build
       run: cargo build --verbose
