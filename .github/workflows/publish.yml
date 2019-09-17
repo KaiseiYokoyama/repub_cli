@@ -18,6 +18,6 @@ jobs:
         rust-version: ${{ matrix.rust }}
     - uses: actions/checkout@v1
     - name: Login
-      run: cargo login &{{ secrets.CRATES_IO_API_ACCESS_TOKEN }}
+      run: cargo login ${{ secrets.CRATES_IO_API_ACCESS_TOKEN }}
     - name: Publish
       run: cargo publish
