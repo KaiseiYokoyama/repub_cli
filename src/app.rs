@@ -53,9 +53,9 @@ pub fn app<'a,'b>() -> App<'a,'b> {
             .possible_values(&["htb", "vrl", "vlr"])
             .default_value("htb"))
         // tocに載せるヘッダーのレベル
-        .arg(Arg::with_name("toc_level")
+        .arg(Arg::with_name("toc_depth")
             .help("目次に表示するHeaderの最低レベル(1~5)")
-            .short("h")
+            .long("toc-depth")
             .takes_value(true))
 }
 

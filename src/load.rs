@@ -183,7 +183,7 @@ mod config {
             };
 
             let toc_depth = {
-                if let Some(level) = value.value_of("toc_level") {
+                if let Some(level) = value.value_of("toc_depth") {
                     match level.parse::<u8>() {
                         Ok(ok) => ok,
                         Err(_) => {
