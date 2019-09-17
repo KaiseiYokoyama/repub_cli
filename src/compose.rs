@@ -25,16 +25,13 @@ impl TryFrom<InputData> for Composer {
     }
 }
 
-// todo --save オプション (一時ファイルを保存する)
 #[cfg(not(debug_assertions))]
 impl Drop for Composer {
     fn drop(&mut self) {
-//        if (!self.data.cfg.save) {
-        if cfg!(target_os = "macos") {
+        if (!self.data.cfg.save) && cfg!(target_os = "macos") {
             std::fs::remove_dir_all(&self.tmp_dir.path);
-            RepubLog::removed(format!("Temporary files: {}", &self.tmp_dir.path));
+            RepubLog::removed(&format!("Temporary files: {:?}", &self.tmp_dir.path)).print();
         }
-//        }
     }
 }
 
