@@ -1,4 +1,4 @@
-name: Pushed dev branch
+name: "Pushed dev branch"
 
 on:
   push:
