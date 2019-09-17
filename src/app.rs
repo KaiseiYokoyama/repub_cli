@@ -15,7 +15,7 @@ pub fn app<'a,'b>() -> App<'a,'b> {
             .help("一時ファイルを消去しない")
             .long("save"))
         // 設定ファイルを出力
-        .arg(Arg::with_name("save_config_files")
+        .arg(Arg::with_name("config")
             .help("設定ファイルを保存")
             .long("config"))
         // ログを表示

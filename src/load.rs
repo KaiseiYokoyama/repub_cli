@@ -64,8 +64,10 @@ mod config {
         pub min_toc_level: u8,
         /// ログ表示するか否か
         pub verbose: bool,
-        /// tmp_dirを消去するか否か
+        /// tmp_dir を消去するか否か
         pub save: bool,
+        /// config ファイルを出力する
+        pub config: bool,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
@@ -165,6 +167,8 @@ mod config {
 
             let save = value.is_present("save");
 
+            let config = value.is_present("config");
+
             // logger を初期化
             env_logger::Builder::from_default_env()
                 .format(|buf, record| writeln!(buf, "{}", record.args()))
@@ -179,7 +183,8 @@ mod config {
                 book_id,
                 min_toc_level,
                 verbose,
-                save
+                save,
+                config,
             })
         }
     }
