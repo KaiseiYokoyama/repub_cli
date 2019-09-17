@@ -11,13 +11,17 @@ pub fn app<'a,'b>() -> App<'a,'b> {
         .arg(Arg::from_usage("<input> '変換するマークダウンファイル OR 変換するマークダウン文書(複数可)の入ったディレクトリ OR 設定ファイル'")
             .validator(validators::md_validator))
         // 一時ファイルを消さない
-        .arg(Arg::with_name("save_tmp_files")
+        .arg(Arg::with_name("save")
             .help("一時ファイルを消去しない")
             .long("save"))
         // 設定ファイルを出力
         .arg(Arg::with_name("save_config_files")
             .help("設定ファイルを保存")
             .long("config"))
+        // ログを表示
+        .arg(Arg::with_name("verbose")
+            .help("ログを表示")
+            .long("verbose"))
         // タイトル
         .arg(Arg::with_name("title")
             .help("タイトルを設定")

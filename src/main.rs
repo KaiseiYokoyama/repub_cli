@@ -13,6 +13,8 @@ extern crate clap;
 extern crate failure;
 #[macro_use]
 extern crate html5ever;
+#[macro_use]
+extern crate log;
 
 use crate::{prelude::*, load::*, data::*, compose::*};
 

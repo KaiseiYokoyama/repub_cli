@@ -5,12 +5,12 @@ markdown 文書を 電子書籍 (epub3) に変換します。
 
 ## Install
 ```bash
-cargo install --git https://github.com/crome110/repub
+cargo install repub
 ```
 
 ### Update
 ```bash
-cargo install --force --git https://github.com/crome110/repub
+cargo install --force repub
 ```
 
 ### Uninstall
@@ -23,9 +23,9 @@ cargo uninstall repub
 
 ```
 $ repub --help
-repub 0.1.0
+repub 0.1.2
 Kaisei Yokoyama <yokoyama.kaisei.sm@alumni.tsukuba.ac.jp>
-convert markdown(s) to epub
+A tool to convert markdown documents to epub.
 
 USAGE:
     repub [FLAGS] [OPTIONS] <input>
@@ -35,6 +35,7 @@ FLAGS:
         --config     設定ファイルを保存
         --save       一時ファイルを消去しない
     -V, --version    Prints version information
+        --verbose    ログを表示
 
 OPTIONS:
     -i, --bookid <book_id>       Book ID

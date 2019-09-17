@@ -1,6 +1,6 @@
 [package]
 name = "repub"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["Kaisei Yokoyama <yokoyama.kaisei.sm@alumni.tsukuba.ac.jp>"]
 edition = "2018"
 
@@ -23,4 +23,7 @@ chrono = "0.4"
 html5ever = "0.24"
 zip = "0.5"
 serde = { version = "1.0", features = ["derive"] }
-colored = "1.8"
+#colored = "1.8"
+colored = { git = "https://github.com/tforgione/colored.git", branch = "master" }
+log = "0.4"
+env_logger = "0.6"
