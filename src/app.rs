@@ -15,7 +15,7 @@ pub fn app<'a,'b>() -> App<'a,'b> {
             .help("一時ファイルを消去しない")
             .long("save"))
         // 設定ファイルを出力
-        .arg(Arg::with_name("save_config_files")
+        .arg(Arg::with_name("config")
             .help("設定ファイルを保存")
             .long("config"))
         // ログを表示
@@ -53,9 +53,9 @@ pub fn app<'a,'b>() -> App<'a,'b> {
             .possible_values(&["htb", "vrl", "vlr"])
             .default_value("htb"))
         // tocに載せるヘッダーのレベル
-        .arg(Arg::with_name("toc_level")
+        .arg(Arg::with_name("toc_depth")
             .help("目次に表示するHeaderの最低レベル(1~5)")
-            .short("h")
+            .long("toc-depth")
             .takes_value(true))
 }
 

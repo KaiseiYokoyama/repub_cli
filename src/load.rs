@@ -48,7 +48,7 @@ mod config {
     pub use writing_mode::{WritingMode, PageProgressionDirection};
 
     /// 出力設定
-    #[derive(Serialize, Deserialize, Debug)]
+    #[derive(Serialize, Deserialize, Debug, Default)]
     pub struct Config {
         /// コマンドの<input>として与えられたpath(変換対象)
         pub target: PathBuf,
@@ -61,11 +61,13 @@ mod config {
         pub book_id: String,
         /// 目次に表示するheaderの最低レベル
         /// 1を指定すればh1のみ、5以上を指定すればh1~h5の全てのheaderが目次に表示される
-        pub min_toc_level: u8,
+        pub toc_depth: u8,
         /// ログ表示するか否か
         pub verbose: bool,
-        /// tmp_dirを消去するか否か
+        /// tmp_dir を消去するか否か
         pub save: bool,
+        /// config ファイルを出力する
+        pub config: bool,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
@@ -80,9 +82,39 @@ mod config {
                 PathBuf::from_str(source_path_str)?
             };
 
+            // 設定ファイル読み込み
+            fn from_json(target: &PathBuf) -> Option<Config> {
+                if target.is_file() {
+                    return None;
+                }
+
+                let json_path = target.join(CONFIG_JSON);
+
+                if !json_path.is_file() {
+                    return None;
+                }
+
+                let json = match std::fs::read_to_string(&json_path) {
+                    Ok(json) => json,
+                    Err(_) => return None,
+                };
+
+                match serde_json::from_str::<Config>(&json) {
+                    Ok(cfg) => Some(cfg),
+                    Err(e) => {
+                        RepubWarning(format!("{:?} {}", &json_path, &e)).print();
+                        None
+                    }
+                }
+            }
+
+            let mut cfg = from_json(&target);
+
             let title = {
                 if let Some(title) = value.value_of("title") {
                     title.to_string()
+                } else if let Some(cfg) = &cfg {
+                    cfg.title.clone()
                 } else {
                     print!("Title: ");
                     std::io::stdout().flush().context("Failed to read line.")?;
@@ -97,6 +129,8 @@ mod config {
             let creator = {
                 if let Some(creator) = value.value_of("creator") {
                     creator.to_string()
+                } else if let Some(cfg) = &cfg {
+                    cfg.creator.clone()
                 } else {
                     print!("Creator: ");
                     std::io::stdout().flush().context("Failed to read line.")?;
@@ -111,6 +145,8 @@ mod config {
             let language = {
                 if let Some(language) = value.value_of("language") {
                     language.to_string()
+                } else if let Some(cfg) = &cfg {
+                    cfg.language.clone()
                 } else {
                     print!("Language: ");
                     std::io::stdout().flush().context("Failed to read line.")?;
@@ -125,6 +161,8 @@ mod config {
             let writing_mode = {
                 if let Some(mode) = value.value_of("writing_mode") {
                     WritingMode::from_str(mode)?
+                } else if let Some(cfg) = &cfg {
+                    cfg.writing_mode.clone()
                 } else {
                     WritingMode::default()
                 }
@@ -134,6 +172,8 @@ mod config {
                 if let Some(id) = value.value_of("book_id") {
                     println!("Book ID: {}", id);
                     id.to_string()
+                } else if let Some(cfg) = &cfg {
+                    cfg.book_id.clone()
                 } else {
                     rand::thread_rng()
                         .sample_iter(&Alphanumeric)
@@ -142,28 +182,50 @@ mod config {
                 }
             };
 
-            let min_toc_level = {
-                if let Some(level) = value.value_of("toc_level") {
+            let toc_depth = {
+                if let Some(level) = value.value_of("toc_depth") {
                     match level.parse::<u8>() {
-                        Ok(ok) => ok - 1,
+                        Ok(ok) => ok,
                         Err(_) => {
                             let level_alt = 2;
                             RepubWarning(format!("{} は目次の最低レベルに設定できません {} に設定しました", &level, &level_alt)).print();
                             level_alt
                         }
                     }
+                } else if let Some(cfg) = &cfg {
+                    cfg.toc_depth.clone()
                 } else { 2 }
             };
 
-            let verbose = value.is_present("verbose");
+            let verbose = {
+                let a = value.is_present("verbose");
+                let b =
+                    if let Some(cfg) = &cfg {
+                        cfg.verbose.clone()
+                    } else { false };
+                (a || b) && !(a && b)
+            };
             if verbose {
-                println!("verbose");
                 std::env::set_var("RUST_LOG", "info");
-            } else {
-                println!("not verbose");
             }
 
-            let save = value.is_present("save");
+            let save = {
+                let a = value.is_present("save");
+                let b =
+                    if let Some(cfg) = &cfg {
+                        cfg.save.clone()
+                    } else { false };
+                (a || b) && !(a && b)
+            };
+
+            let config = {
+                let a = value.is_present("config");
+                let b =
+                    if let Some(cfg) = &cfg {
+                        cfg.config.clone()
+                    } else { false };
+                (a || b) && !(a && b)
+            };
 
             // logger を初期化
             env_logger::Builder::from_default_env()
@@ -177,9 +239,10 @@ mod config {
                 creator,
                 language,
                 book_id,
-                min_toc_level,
+                toc_depth,
                 verbose,
-                save
+                save,
+                config,
             })
         }
     }
@@ -195,7 +258,7 @@ mod config {
 
         /// 書式
         ///  [参考](https://developer.mozilla.org/ja/docs/Web/CSS/writing-mode)
-        #[derive(Debug)]
+        #[derive(Debug, Clone)]
         pub enum WritingMode {
             /// コンテンツは左から右へ水平に、上から下へ垂直方向に流れます。次の水平な行は、前の行の下に配置されます。
             HorizontalTb,

@@ -7,6 +7,8 @@ pub use message::{
 
 use crate::prelude::*;
 
+pub const CONFIG_JSON :&str = "repub_config.json";
+
 pub mod message {
     use super::*;
 
@@ -91,7 +93,7 @@ pub mod message {
         impl Message for RepubLog {
             fn print(&self) {
                 let RepubLog(status, _) = &self;
-                if status == &RepubLogStatus::Published {
+                if status == &RepubLogStatus::Published || status == &RepubLogStatus::Config {
                     println!("{}", &self);
                 } else {
                     info!("{}", &self);
@@ -123,6 +125,14 @@ pub mod message {
             pub fn removed<T: ToString>(to_string: &T) -> Self {
                 Self(RepubLogStatus::Removed, to_string.to_string())
             }
+
+            pub fn config<T: ToString>(to_string: &T) -> Self {
+                Self(RepubLogStatus::Config, to_string.to_string())
+            }
+
+            pub fn custom<T: ToString>(hex: u64, preamble: &T, to_string: &T) -> Self {
+                Self(RepubLogStatus::Custom(hex, preamble.to_string()), to_string.to_string())
+            }
         }
 
         /// Logの種類(作業の進み具合)
@@ -140,6 +150,9 @@ pub mod message {
             Published,
             /// tmp_dir を削除した
             Removed,
+            /// config を保存した
+            Config,
+            Custom(u64, String),
         }
 
         impl Display for RepubLogStatus {
@@ -170,6 +183,13 @@ pub mod message {
                     RepubLogStatus::Removed => {
                         // #3f51b5 indigo
                         format!("🗑{:?}", &self).as_str().hex_color(0x3f51b5).bold()
+                    }
+                    RepubLogStatus::Config => {
+                        // #9c27b0 purple
+                        format!("🔨{:?}", &self).as_str().hex_color(0x9c27b0).bold()
+                    }
+                    RepubLogStatus::Custom(hex, string) => {
+                        format!("{}", string).as_str().hex_color(hex.clone()).bold()
                     }
                 };
 
