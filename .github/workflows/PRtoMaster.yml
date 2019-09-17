@@ -1,4 +1,4 @@
-name: Pull Request to master branch
+name: "Pull Request to master branch"
 
 on:
   pull_request:
