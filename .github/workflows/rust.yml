@@ -1,11 +1,12 @@
 name: Rust
 
 on: push
-  branches:
-    - master
-    - dev/*
-  paths:
-    - src/*
+  push:
+    branches:
+      - master
+      - dev/*
+    paths:
+      - src/*
 
 jobs:
   build:
