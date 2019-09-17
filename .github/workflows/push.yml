@@ -10,10 +10,14 @@ on:
 
 jobs:
   build:
-
     runs-on: macOS-latest
-
+    strategy:
+      matrix:
+        rust: stable
     steps:
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: ${{ matrix.rust }}
     - uses: actions/checkout@v1
     - name: Build
       run: cargo build --verbose

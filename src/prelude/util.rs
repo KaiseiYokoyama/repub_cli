@@ -84,13 +84,13 @@ pub mod message {
         impl Display for RepubLog {
             fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
                 let RepubLog(status, string) = &self;
-                write!(f,"{} {}", status, string)
+                write!(f, "{} {}", status, string)
             }
         }
 
         impl Message for RepubLog {
             fn print(&self) {
-                let RepubLog(status,_) = &self;
+                let RepubLog(status, _) = &self;
                 if status == &RepubLogStatus::Published {
                     println!("{}", &self);
                 } else {
