@@ -1,6 +1,6 @@
 [package]
 name = "repub"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Kaisei Yokoyama <yokoyama.kaisei.sm@alumni.tsukuba.ac.jp>"]
 edition = "2018"
 
@@ -8,7 +8,8 @@ description = "A tool to convert markdown documents to epub."
 license = "MIT"
 repository = "https://github.com/KaiseiYokoyama/repub"
 readme = "README.md"
-categories = ["epub","markdown"]
+keywords = ["repub", "epub", "markdown", "eBook"]
+categories = ["text-processing", "command-line-utilities"]
 
 exclude = [
     "test/*",
