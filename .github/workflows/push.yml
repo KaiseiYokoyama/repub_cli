@@ -13,7 +13,7 @@ jobs:
     runs-on: macOS-latest
     strategy:
       matrix:
-        rust: stable
+        rust: [stable]
     steps:
     - uses: hecrj/setup-rust-action@v1
       with:
