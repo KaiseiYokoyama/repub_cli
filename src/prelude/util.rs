@@ -148,26 +148,32 @@ pub mod message {
 
                 let preamble = match &self {
                     RepubLogStatus::Packed => {
-                        format!("{:?}", &self).as_str().green().bold()
+                        // #4caf50 green
+                        format!("📦{:?}", &self).as_str().hex_color(0x4caf50).bold()
                     }
                     RepubLogStatus::Converted => {
-                        format!("{:?}", &self).as_str().bright_green().bold()
+                        // #8bc34a light-green
+                        format!("📜{:?}", &self).as_str().hex_color(0x8bc34a).bold()
                     }
                     RepubLogStatus::Indexed => {
-                        format!("{:?}", &self).as_str().cyan().bold()
+                        // #009688 teal
+                        format!("🏷{:?}", &self).as_str().hex_color(0x009688).bold()
                     }
                     RepubLogStatus::Zipped => {
-                        format!("{:?}", &self).as_str().purple().bold()
+                        // #827717 lime darken-4
+                        format!("🗄{:?}", &self).as_str().hex_color(0x827717).bold()
                     }
                     RepubLogStatus::Published => {
-                        format!("{:?}", &self).as_str().blue().bold()
+                        // #03a9f4 light-blue
+                        format!("📚{:?}", &self).as_str().hex_color(0x03a9f4).bold()
                     }
                     RepubLogStatus::Removed => {
-                        format!("{:?}", &self).as_str().yellow().bold()
+                        // #3f51b5 indigo
+                        format!("🗑{:?}", &self).as_str().hex_color(0x3f51b5).bold()
                     }
                 };
 
-                write!(f, "[{}]\t", &preamble)
+                write!(f, "{:<10}\t", &preamble)
             }
         }
 
