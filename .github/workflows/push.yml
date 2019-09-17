@@ -1,9 +1,8 @@
-name: Rust
+name: Pushed dev branch
 
 on:
   push:
     branches:
-      - master
       - dev/*
     paths:
       - src/*
