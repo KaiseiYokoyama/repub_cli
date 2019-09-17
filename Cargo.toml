@@ -11,7 +11,11 @@ readme = "README.md"
 categories = ["epub","markdown"]
 
 exclude = [
-    "test/*"
+    "test/*",
+    "examples/*",
+    ".github/*",
+    ".travis.yml",
+    ".repub.iml",
 ]
 
 [dependencies]
