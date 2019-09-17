@@ -1,0 +1,23 @@
+name: Release
+
+on:
+  release:
+    type: [published]
+    branches:
+      - master
+      
+jobs:
+  release:
+    runs-on: macOS-latest
+    strategy:
+      matrix:
+        rust: [stable]
+    steps:
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: ${{ matrix.rust }}
+    - uses: actions/checkout@v1
+    - name: Login
+      run: cargo login &{{ secrets.CRATES_IO_API_ACCESS_TOKEN }}
+    - name: Publish
+      run: cargo publish
