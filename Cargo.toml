@@ -1,6 +1,6 @@
 [package]
 name = "repub"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Kaisei Yokoyama <yokoyama.kaisei.sm@alumni.tsukuba.ac.jp>"]
 edition = "2018"
 
