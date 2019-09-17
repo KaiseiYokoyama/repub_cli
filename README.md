@@ -1,9 +1,16 @@
 # repub [![Build Status](https://travis-ci.com/KaiseiYokoyama/repub.svg?branch=master)](https://travis-ci.com/KaiseiYokoyama/repub) [![dependency status](https://deps.rs/repo/github/KaiseiYokoyama/repub/status.svg)](https://deps.rs/repo/github/KaiseiYokoyama/repub) ![GitHub](https://img.shields.io/github/license/KaiseiYokoyama/repub) [![Crates.io](https://img.shields.io/crates/v/repub.svg?maxAge=2592000)](https://crates.io/crates/repub)
 
-markdown 文書を 電子書籍 (epub3) に変換します。
+markdown 文書を 電子書籍 (epub3) に変換します. 
 ![cover_image](https://user-images.githubusercontent.com/8509057/64936464-0ce98980-d891-11e9-97f9-72925653c4ba.png)
 
 ## Install
+まず, Rust 開発環境を整えてください. 
+```bash
+curl https://sh.rustup.rs -sSf | sh
+```
+
+***repubをインストール***
+
 ```bash
 cargo install repub
 ```
@@ -19,11 +26,11 @@ cargo uninstall repub
 ```
 
 ## Usage
-[usage.md](examples/usage/usage.md)を御覧ください。
+[usage.md](examples/usage/usage.md)を御覧ください. 
 
 ```
 $ repub --help
-repub 0.2.0
+repub 0.3.0
 Kaisei Yokoyama <yokoyama.kaisei.sm@alumni.tsukuba.ac.jp>
 A tool to convert markdown documents to epub.
 
