@@ -32,11 +32,10 @@ impl Drop for Composer {
             if cfg.config {
                 let path = {
                     let path = &cfg.target;
-                    let filename = "config.json";
                     if path.is_file() {
-                        path.with_file_name(filename)
+                        path.with_file_name(CONFIG_JSON)
                     } else if path.is_dir() {
-                        path.join(filename)
+                        path.join(CONFIG_JSON)
                     } else {
                         unreachable!()
                     }
@@ -299,7 +298,7 @@ impl Composer {
         let style_xhtml = self.composed.styles_links(&path);
 
         // 目次要素を生成
-        let toc = self.toc.to_xhtml(self.data.cfg.min_toc_level, &path);
+        let toc = self.toc.to_xhtml(self.data.cfg.toc_depth, &path);
 
         let xhtml = format!(
             include_str!("literals/navigation.xhtml"),

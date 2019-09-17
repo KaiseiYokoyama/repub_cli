@@ -7,6 +7,8 @@ pub use message::{
 
 use crate::prelude::*;
 
+pub const CONFIG_JSON :&str = "config.json";
+
 pub mod message {
     use super::*;
 
