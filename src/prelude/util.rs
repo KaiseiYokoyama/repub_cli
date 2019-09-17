@@ -38,7 +38,7 @@ pub mod message {
 
         impl Display for RepubError {
             fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-                use colored::*;
+                use colored_truecolor::*;
                 write!(f, "{}\t {}", "[Error]".on_red().white().bold(), self.as_ref())
             }
         }
@@ -67,7 +67,7 @@ pub mod message {
 
         impl Display for RepubWarning {
             fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-                use colored::*;
+                use colored_truecolor::*;
                 write!(f, "{}\t {}", "[Warning]".on_yellow().bold(), self.as_ref())
             }
         }
@@ -144,7 +144,7 @@ pub mod message {
 
         impl Display for RepubLogStatus {
             fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-                use colored::*;
+                use colored_truecolor::*;
 
                 let preamble = match &self {
                     RepubLogStatus::Packed => {
