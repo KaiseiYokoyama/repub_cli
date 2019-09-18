@@ -39,34 +39,34 @@ repub <.md file XOR directory>
 上記のような構成のディレクトリを変換した場合, `markdown0.md`および`markdown1.md`のどちらの変換にも, また生成された目次(`navigation.xhtml`)にも`style.css`が適用されます. 
 
 ## Options
-### Help: --help
+### Help: `--help`
 ヘルプを表示します. 
 
-### Config: --config
+### Config: `--config`
 設定ファイル(`repub_config.json`)を変換対象のディレクトリに保存します. 
 変換対象のディレクトリに`repub_config.json`がある場合, 諸設定を`repub_config.json`から読み取ります. 
 また, 実行コマンドのオプションを重ねることで, `repub_config.json`の命令の上書きが可能です. 
 
-### Save: --save
+### Save: `--save`
 一時ファイルを消去しません. 
 
-### Verbose: --verbose
+### Verbose: `--verbose`
 ログを表示します. 
 
-### Book ID: -i, --bookid
+### Book ID: `-i, --bookid`
 `book id`を指定します. このオプションがない場合, book_idは自動で生成されます. 
 
-### Creator: -c, --creator <creator>
+### Creator: `-c, --creator <creator>`
 作者, 編集者, 翻訳者などの名前を設定します. 
 
-### Title: -t, --title <title>
+### Title: `-t, --title <title>`
 タイトルを設定します. 
 
-### ToC Depth: --toc-depth <toc_depth>
+### ToC Depth: `--toc-depth <toc_depth>`
 目次に表示するヘッダーのレベルを設定します. このオプションがない場合, 2に指定されます. 
 3に指定した場合, `#`,`##`,`###`の3つのヘッダーが目次に表示されます. 
 
-### Mode: --mode
+### Mode: `--mode`
 縦書きのためのオプションです. [htb, vrl, vlr]から1つを指定します. このオプションがない場合, `htb`(横書き)に指定されます. 
 詳しくは, [tategaki.md](../tategaki_vertical/tategaki.md)を参照してください. 
 
