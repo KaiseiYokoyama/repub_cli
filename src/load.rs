@@ -173,7 +173,6 @@ mod config {
 
             let book_id = {
                 if let Some(id) = value.value_of("book_id") {
-                    println!("Book ID: {}", id);
                     id.to_string()
                 } else if let Some(cfg) = &cfg {
                     cfg.book_id.clone()
