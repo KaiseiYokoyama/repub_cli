@@ -46,6 +46,11 @@ pub fn app<'a,'b>() -> App<'a,'b> {
             .short("id")
             .long("bookid")
             .takes_value(true))
+        // 表紙
+        .arg(Arg::with_name("cover_image")
+            .help("表紙 / Cover image")
+            .long("cover-image")
+            .takes_value(true))
         // 縦書き
         .arg(Arg::with_name("writing_mode")
             .help("縦書き / 横書き")
