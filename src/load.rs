@@ -71,6 +71,8 @@ mod config {
         pub save: bool,
         /// config ファイルを出力する
         pub config: bool,
+        /// 表紙
+        pub cover_image: Option<PathBuf>,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
@@ -184,6 +186,23 @@ mod config {
                 }
             };
 
+            let cover_image = {
+                if let Some(cover_image) = value.value_of("cover_image") {
+                    let path = PathBuf::from(cover_image);
+
+                    // Validation
+                    if path.exists() {
+                        PathBuf::path_diff(&target, &path)
+                    } else { None }
+                } else if let Some(cfg) = &cfg {
+                    // Validation
+                    let cover_image = cfg.cover_image.clone();
+                    cover_image.filter(|p| p.exists())
+                } else {
+                    None
+                }
+            };
+
             let toc_depth = {
                 if let Some(level) = value.value_of("toc_depth") {
                     match level.parse::<u8>() {
@@ -245,6 +264,7 @@ mod config {
                 verbose,
                 save,
                 config,
+                cover_image,
             })
         }
     }
