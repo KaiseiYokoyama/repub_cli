@@ -79,7 +79,6 @@ impl Drop for Composer {
 
 impl Composer {
     /// css を tmp directoryに格納する
-    /// *compose_css* -> compose_static -> compose_contents -> compose_nav -> compose_opf
     pub fn compose_css(&mut self) -> RepubResult<&mut Self> {
         for file in &self.data.files.style_files {
             let relative_path = PathBuf::path_diff(&self.data.cfg.target, &file.path).unwrap();
@@ -99,7 +98,6 @@ impl Composer {
     }
 
     /// static file を tmp directory に格納する
-    /// compose_css -> *compose_static* -> compose_contents -> compose_nav -> compose_opf
     pub fn compose_static(&mut self) -> RepubResult<&mut Self> {
         for file in &self.data.files.static_files {
             let relative_path = PathBuf::path_diff(&self.data.cfg.target, &file.path).unwrap();
@@ -126,7 +124,8 @@ impl Composer {
     }
 
     /// content file を変換して, 内容を目次に登録し tmp directory に格納する
-    /// compose_css -> compose_static -> *compose_contents* -> compose_nav -> compose_opf
+    /// `.md`ファイルを変換してつくる`.xhtml`ファイルに`.css`を適用するので,
+    /// このメソッドの実行までに`compose_css()`を実行する必要がある
     pub fn compose_contents(&mut self) -> RepubResult<&mut Self> {
         use html5ever::{
             serialize,
@@ -302,6 +301,33 @@ impl Composer {
         Ok(self)
     }
 
+    /// cover image が存在すれば pack する
+    pub fn compose_cover_image(&mut self) -> RepubResult<&mut Self> {
+        if let Some(image) = &self.data.cfg.cover_image {
+            let relative_path = PathBuf::path_diff(&self.data.cfg.target, image).unwrap();
+            let to = self.tmp_dir.oebps.path.join(&relative_path);
+
+            // epub3の対応している拡張子かどうかを確認する -> そうでなければreturn
+            match ComposedItem::new(file, &to, "static", self.composed.static_items.len()) {
+                Ok(mut composed) => {
+                    // 対応している拡張子ならばcopy
+                    std::fs::copy(&file.path, &to)?;
+                    // ログ出力
+                    RepubLog::packed(&format!("Cover Image ({:?})", &relative_path)).print();
+
+                    composed.properties.push(Properties::CoverImage);
+                    // <spine>要素への登録は不要 -> 登録先はstatic_itemsでok
+                    self.composed.static_items.push(composed);
+                }
+                Err(e) => {
+                    RepubWarning(format!("{:?} : {}", &file.path, &e)).print();
+                }
+            }
+        }
+
+        Ok(self)
+    }
+
     /// self.toc を参照して, navigation.xhtml を生成する
     /// compose_css -> compose_static -> compose_contents -> *compose_nav* -> compose_opf
     pub fn compose_nav(&mut self) -> RepubResult<&mut Self> {
@@ -420,7 +446,12 @@ impl Composer {
 
     /// すべてのファイルを(必要があれば)変換, 書き換えをして tmp directory に格納する
     pub fn compose(&mut self) -> RepubResult<()> {
-        self.compose_css()?.compose_static()?.compose_contents()?.compose_nav()?.compose_opf()?;
+        self.compose_css()?
+            .compose_static()?
+            .compose_contents()?
+            .compose_cover_image()?
+            .compose_nav()?
+            .compose_opf()?;
 
         if cfg!(target_os = "macos") {
             self.zip()?;
