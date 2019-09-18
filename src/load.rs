@@ -71,6 +71,8 @@ mod config {
         pub save: bool,
         /// config ファイルを出力する
         pub config: bool,
+        /// 表紙
+        pub cover_image: Option<PathBuf>,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
@@ -111,7 +113,7 @@ mod config {
                 }
             }
 
-            let mut cfg = from_json(&target);
+            let cfg = from_json(&target);
 
             let title = {
                 if let Some(title) = value.value_of("title") {
@@ -173,7 +175,6 @@ mod config {
 
             let book_id = {
                 if let Some(id) = value.value_of("book_id") {
-                    println!("Book ID: {}", id);
                     id.to_string()
                 } else if let Some(cfg) = &cfg {
                     cfg.book_id.clone()
@@ -182,6 +183,25 @@ mod config {
                         .sample_iter(&Alphanumeric)
                         .take(30)
                         .collect::<String>()
+                }
+            };
+
+            let cover_image = {
+                if let Some(cover_image) = value.value_of("cover_image") {
+                    let path = target.join(PathBuf::from(cover_image));
+
+                    // Validation
+                    if path.exists() {
+                        PathBuf::path_diff(&target, &path)
+                    } else { None }
+                } else if let Some(cfg) = &cfg {
+                    // Validation
+                    let cover_image = cfg.cover_image.clone();
+                    cover_image.filter(|p| {
+                        target.join(p).exists()
+                    })
+                } else {
+                    None
                 }
             };
 
@@ -246,6 +266,7 @@ mod config {
                 verbose,
                 save,
                 config,
+                cover_image,
             })
         }
     }

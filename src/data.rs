@@ -79,6 +79,7 @@ mod files {
                 let ext = value.ext.as_ref().ok_or(())?;
                 match ext.as_str() {
                     "md" => ConvertType::MarkdownToXHTML,
+                    "xhtml" => ConvertType::NoConversion,
                     _ => return Err(()),
                 }
             };
@@ -94,5 +95,6 @@ mod files {
     #[derive(Debug)]
     pub enum ConvertType {
         MarkdownToXHTML,
+        NoConversion,
     }
 }

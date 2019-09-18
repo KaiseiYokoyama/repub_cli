@@ -60,3 +60,25 @@ pub trait PathDiff {
 }
 
 impl PathDiff for PathBuf {}
+
+pub trait JoinFileName: AsRef<Path> {
+    fn join_file_name<T>(&self, file_name: T) -> Option<PathBuf>
+        where T: AsRef<str>
+    {
+        let path = self.as_ref();
+
+        if !path.exists() {
+            return None;
+        }
+
+        Some(
+            if path.is_file() {
+                path.with_file_name(file_name.as_ref())
+            } else if path.is_dir() {
+                path.join(file_name.as_ref())
+            } else { unreachable!() }
+        )
+    }
+}
+
+impl JoinFileName for PathBuf {}
