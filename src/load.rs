@@ -54,8 +54,11 @@ mod config {
         pub target: PathBuf,
         /// 書式
         pub writing_mode: WritingMode,
+        /// タイトル
         pub title: String,
+        /// 著者, 編集者, 翻訳者など
         pub creator: String,
+        /// 言語
         pub language: String,
         /// epub形式で本の識別に利用されるid
         pub book_id: String,

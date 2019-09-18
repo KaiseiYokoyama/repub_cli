@@ -30,7 +30,7 @@ cargo uninstall repub
 
 ```
 $ repub --help
-repub 0.3.0
+repub 0.4.0
 Kaisei Yokoyama <yokoyama.kaisei.sm@alumni.tsukuba.ac.jp>
 A tool to convert markdown documents to epub.
 
@@ -48,7 +48,7 @@ OPTIONS:
     -i, --bookid <book_id>         Book ID
     -c, --creator <creator>        作者、編集者、翻訳者など
     -l, --language <language>      言語
-    -t, --title <title>            タイトルを設定
+    -t, --title <title>            タイトル
         --toc-depth <toc_depth>    目次に表示するHeaderの最低レベル(1~5)
         --mode <writing_mode>      縦書き / 横書き [default: htb]  [possible values: htb, vrl, vlr]
 

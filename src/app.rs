@@ -24,7 +24,7 @@ pub fn app<'a,'b>() -> App<'a,'b> {
             .long("verbose"))
         // タイトル
         .arg(Arg::with_name("title")
-            .help("タイトルを設定")
+            .help("タイトル")
             .short("t")
             .long("title")
             .takes_value(true))
