@@ -7,6 +7,8 @@ pub struct Composer {
     data: InputData,
     composed: Composed,
     toc: TableOfContents,
+    navigation: Option<ComposedItem>,
+    package_opf: Option<ComposedItem>,
 }
 
 impl TryFrom<InputData> for Composer {
@@ -21,6 +23,8 @@ impl TryFrom<InputData> for Composer {
             data: value,
             composed,
             toc: TableOfContents::new(),
+            navigation: None,
+            package_opf: None,
         })
     }
 }
@@ -54,7 +58,7 @@ impl Drop for Composer {
                 file.write_all(json_str.as_bytes())?;
                 file.flush()?;
 
-                RepubLog::config(&format!("Saved to {:?}",&path)).print();
+                RepubLog::config(&format!("Saved to {:?}", &path)).print();
             }
 
             Ok(())
@@ -67,7 +71,7 @@ impl Drop for Composer {
         }
 
         if let Err(e) = output_cfg(&self.data.cfg) {
-            RepubError(format!("{}",e)).print();
+            RepubError(format!("{}", e)).print();
         }
     }
 }
@@ -278,6 +282,18 @@ impl Composer {
 
                         ComposedItem::new(&file.src, &to, "contents", self.composed.contents.len())?
                     }
+                    ConvertType::NoConversion => {
+                        let relative_path = PathBuf::path_diff(&self.data.cfg.target, &file.src.path).unwrap();
+                        let to = self.tmp_dir.oebps.path.join(&relative_path);
+
+                        // 書き込み
+                        std::fs::copy(&file.src.path,&to)?;
+
+                        // ログ出力
+                        RepubLog::packed(&format!("{:?}", relative_path)).print();
+
+                        ComposedItem::new(&file.src, &to, "contents", self.composed.contents.len())?
+                    }
                 };
 
             self.composed.contents.push(composed);
@@ -310,10 +326,11 @@ impl Composer {
 
         std::fs::File::create(&path)?.write_all(xhtml.as_bytes())?;
 
-        // composedに登録
+        // 登録
         let mut composed = ComposedItem::without_src(&path, "navigation", 0)?;
         composed.properties.push(Properties::Nav);
-        self.composed.contents.push(composed);
+//        self.composed.contents.push(composed);
+        self.navigation = Some(composed);
 
         // ログ出力
         RepubLog::packed(&format!("{:?}", PathBuf::path_diff(&self.tmp_dir.path, &path).unwrap())).print();
@@ -341,17 +358,12 @@ impl Composer {
         );
 
         let manifest_str = {
-            let items_str = self.composed.contents
-                .iter()
-                .chain(
-                    self.composed.style_items.iter()
-                )
-                .chain(
-                    self.composed.static_items.iter()
-                )
-                .map(|ci| {
-                    ci.as_manifest_item(&path)
-                })
+            let items_str
+                = self.navigation.iter()
+                .chain(self.composed.contents.iter())
+                .chain(self.composed.style_items.iter())
+                .chain(self.composed.static_items.iter())
+                .map(|ci| ci.as_manifest_item(&path))
                 .collect::<Vec<String>>()
                 .join("\n");
 
@@ -363,36 +375,18 @@ impl Composer {
 
         // todo 並びの変更, カバー画像
         let spine_str = {
-            let navs = {
-                let mut navs = vec![];
-                let mut navs_index = vec![];
-                for (index, content) in self.composed.contents.iter().enumerate() {
-                    if content.properties.contains(&Properties::Nav) {
-                        navs_index.push(index);
-                    }
-                }
+            let (handmade_navs, mut contents_without_navs): (Vec<ComposedItem>, Vec<ComposedItem>)
+                = self.composed.contents.clone().into_iter()
+                .partition(|c| c.properties.contains(&Properties::Nav));
 
-                navs_index.reverse();
-
-                for index in navs_index {
-                    navs.push(self.composed.contents.remove(index));
-                }
-
-                navs.sort_by(|a, b| a.id.cmp(&b.id));
-
-                navs
-            };
-
-            // ソート
-            self.composed.contents
+            // sort
+            contents_without_navs
                 .sort_by(|a, b| a.id.cmp(&b.id));
-            // navsを頭に挿入
-            for (index, nav) in navs.into_iter().enumerate() {
-                self.composed.contents.insert(index, nav);
-            }
 
-            let items_str = self.composed.contents
-                .iter()
+            let items_str
+                = self.navigation.iter()
+                .chain(handmade_navs.iter())
+                .chain(contents_without_navs.iter())
                 .map(|ci| ci.as_spine_item())
                 .collect::<Vec<String>>()
                 .join("\n");
@@ -548,6 +542,7 @@ impl Composed {
     }
 }
 
+#[derive(Clone)]
 struct ComposedItem {
     #[allow(dead_code)]
     src: Option<Source>,

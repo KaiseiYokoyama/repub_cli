@@ -113,7 +113,7 @@ mod config {
                 }
             }
 
-            let mut cfg = from_json(&target);
+            let cfg = from_json(&target);
 
             let title = {
                 if let Some(title) = value.value_of("title") {
