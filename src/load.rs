@@ -188,7 +188,7 @@ mod config {
 
             let cover_image = {
                 if let Some(cover_image) = value.value_of("cover_image") {
-                    let path = PathBuf::from(cover_image);
+                    let path = target.join(PathBuf::from(cover_image));
 
                     // Validation
                     if path.exists() {

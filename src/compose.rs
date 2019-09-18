@@ -304,14 +304,15 @@ impl Composer {
     /// cover image が存在すれば pack する
     pub fn compose_cover_image(&mut self) -> RepubResult<&mut Self> {
         if let Some(image) = &self.data.cfg.cover_image {
-            let relative_path = PathBuf::path_diff(&self.data.cfg.target, image).unwrap();
+            let path = &self.data.cfg.target.join(image);
+            let relative_path = image;
             let to = self.tmp_dir.oebps.path.join(&relative_path);
 
-            // epub3の対応している拡張子かどうかを確認する -> そうでなければreturn
-            match ComposedItem::new(file, &to, "static", self.composed.static_items.len()) {
+            // epub3の対応している拡張子かどうかを確認する
+            match ComposedItem::without_src(&to, "static", self.composed.static_items.len()) {
                 Ok(mut composed) => {
                     // 対応している拡張子ならばcopy
-                    std::fs::copy(&file.path, &to)?;
+                    std::fs::copy(&path, &to)?;
                     // ログ出力
                     RepubLog::packed(&format!("Cover Image ({:?})", &relative_path)).print();
 
@@ -320,7 +321,7 @@ impl Composer {
                     self.composed.static_items.push(composed);
                 }
                 Err(e) => {
-                    RepubWarning(format!("{:?} : {}", &file.path, &e)).print();
+                    RepubWarning(format!("{:?} : {}", &path, &e)).print();
                 }
             }
         }
@@ -399,7 +400,7 @@ impl Composer {
             )
         };
 
-        // todo 並びの変更, カバー画像
+        // 並びの変更
         let spine_str = {
             let (handmade_navs, mut contents_without_navs): (Vec<ComposedItem>, Vec<ComposedItem>)
                 = self.composed.contents.clone().into_iter()
