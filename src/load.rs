@@ -71,7 +71,7 @@ mod config {
         pub save: bool,
         /// config ファイルを出力する
         pub config: bool,
-        /// 表紙
+        /// 表紙 targetからの相対パス
         pub cover_image: Option<PathBuf>,
     }
 
