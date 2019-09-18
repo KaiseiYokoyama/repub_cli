@@ -134,7 +134,7 @@ impl Composer {
             serialize::SerializeOpts,
             QualName,
             LocalName,
-            rcdom::{RcDom, NodeData},
+            rcdom::{RcDom, NodeData, Handle},
             tendril::{TendrilSink, StrTendril},
             Attribute,
         };
@@ -165,6 +165,20 @@ impl Composer {
                         ref name,
                         ref attrs, ..
                     } => {
+                        fn node_text(node: &Handle, text: &mut String) {
+                            match node.data {
+                                NodeData::Text { ref contents, .. } => {
+                                    let bind = contents.borrow();
+                                    let s = bind.as_ref();
+                                    text.push_str(s);
+                                }
+                                _ => {}
+                            }
+
+                            for child in node.children.borrow().iter() {
+                                node_text(child, text);
+                            }
+                        }
                         let level = match name.local {
                             local_name!("h1") => 1,
                             local_name!("h2") => 2,
@@ -179,12 +193,10 @@ impl Composer {
 
                         // タイトル抽出
                         let title = {
-                            if let NodeData::Text { ref contents, .. } = child.children.borrow()[0].data {
-                                contents.borrow().to_string()
-                            } else {
-                                RepubWarning(format!("ヘッダー {} のタイトルを読み込めませんでした", &id)).print();
-                                id.clone()
-                            }
+                            let mut title = String::new();
+                            node_text(child, &mut title);
+                            // サニタイズ(テキストと認識されているので, HTMLとして成立していない)
+                            title.replace("<","&lt;").replace(">","&gt;")
                         };
 
                         // tocに登録
@@ -286,7 +298,7 @@ impl Composer {
                         let to = self.tmp_dir.oebps.path.join(&relative_path);
 
                         // 書き込み
-                        std::fs::copy(&file.src.path,&to)?;
+                        std::fs::copy(&file.src.path, &to)?;
 
                         // ログ出力
                         RepubLog::packed(&format!("{:?}", relative_path)).print();
