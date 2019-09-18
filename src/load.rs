@@ -197,7 +197,9 @@ mod config {
                 } else if let Some(cfg) = &cfg {
                     // Validation
                     let cover_image = cfg.cover_image.clone();
-                    cover_image.filter(|p| p.exists())
+                    cover_image.filter(|p| {
+                        target.join(p).exists()
+                    })
                 } else {
                     None
                 }
