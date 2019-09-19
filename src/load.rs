@@ -2,6 +2,7 @@ use clap::ArgMatches;
 
 use crate::prelude::*;
 pub use source::Source;
+pub use ordered_contents::OrderedContents;
 pub use config::{Config, WritingMode, PageProgressionDirection};
 
 /// 入力された情報(設定およびfile)
@@ -49,6 +50,7 @@ mod config {
 
     /// 出力設定
     #[derive(Serialize, Deserialize, Debug, Default)]
+    #[serde(default)]
     pub struct Config {
         /// コマンドの<input>として与えられたpath(変換対象)
         pub target: PathBuf,
@@ -73,6 +75,10 @@ mod config {
         pub config: bool,
         /// 表紙 targetからの相対パス
         pub cover_image: Option<PathBuf>,
+        /// pack 対象から外すファイル targetからの相対パス
+        pub ignores: Vec<String>,
+        /// contents コンテンツに対して独自の指定をするとき
+        pub contents: Option<Vec<OrderedContents>>,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
@@ -250,6 +256,26 @@ mod config {
                 (a || b) && !(a && b)
             };
 
+            let mut ignores = {
+                // config.jsonによる指定がある場合
+                if let Some(ignores) = cfg.as_ref().map(|c| c.ignores.clone()) {
+                    ignores
+                } else {
+                    let mut ignores = vec![String::from(CONFIG_JSON), String::from(".DS_Store")];
+                    // カバー画像がある場合は ignores に追加
+                    if let Some(Some(cover_image)) = cover_image.clone().map(|p| p.to_str().map(|s| s.to_string())) {
+                        ignores.push(cover_image);
+                    }
+                    ignores
+                }
+            };
+
+            let contents
+                = match cfg {
+                Some(cfg) => cfg.contents.clone(),
+                None => None,
+            };
+
             // logger を初期化
             env_logger::Builder::from_default_env()
                 .format(|buf, record| writeln!(buf, "{}", record.args()))
@@ -267,6 +293,8 @@ mod config {
                 save,
                 config,
                 cover_image,
+                ignores,
+                contents,
             })
         }
     }
@@ -475,6 +503,20 @@ mod source {
 //            })
 //        }
 //    }
+}
+
+mod ordered_contents {
+    use super::*;
+    use crate::compose::properties::Properties;
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct OrderedContents {
+        pub src: PathBuf,
+        #[serde(default)]
+        pub properties: Vec<Properties>,
+        #[serde(default)]
+        pub styles: Vec<PathBuf>,
+    }
 }
 
 #[cfg(test)]

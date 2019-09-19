@@ -102,6 +102,10 @@ pub mod message {
         }
 
         impl RepubLog {
+            pub fn ignored<T: ToString>(to_string: &T) -> Self {
+            Self(RepubLogStatus::Ignored, to_string.to_string())
+            }
+
             pub fn packed<T: ToString>(to_string: &T) -> Self {
                 Self(RepubLogStatus::Packed, to_string.to_string())
             }
@@ -139,6 +143,8 @@ pub mod message {
         /// Logの種類(作業の進み具合)
         #[derive(Debug, PartialEq)]
         pub enum RepubLogStatus {
+            /// ignores に含まれるファイルを無視した
+            Ignored,
             /// static なファイル(css含む)をtmp_dirに格納した
             Packed,
             /// 変換が必要なファイルを変換してtmp_dirに格納した
@@ -162,6 +168,10 @@ pub mod message {
                 use colored_truecolor::*;
 
                 let preamble = match &self {
+                    RepubLogStatus::Ignored => {
+                        // #9e9e9e grey
+                        format!("🙈{:?}", &self).as_str().hex_color(0x9e9e9e).bold()
+                    }
                     RepubLogStatus::Packed => {
                         // #4caf50 green
                         format!("📦{:?}", &self).as_str().hex_color(0x4caf50).bold()
