@@ -8,7 +8,6 @@ pub struct Composer {
     composed: Composed,
     toc: TableOfContents,
     navigation: Option<ComposedItem>,
-    package_opf: Option<ComposedItem>,
 }
 
 impl TryFrom<InputData> for Composer {
@@ -24,7 +23,6 @@ impl TryFrom<InputData> for Composer {
             composed,
             toc: TableOfContents::new(),
             navigation: None,
-            package_opf: None,
         })
     }
 }

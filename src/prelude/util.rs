@@ -130,6 +130,7 @@ pub mod message {
                 Self(RepubLogStatus::Config, to_string.to_string())
             }
 
+            #[allow(dead_code)]
             pub fn custom<T: ToString>(hex: u64, preamble: &T, to_string: &T) -> Self {
                 Self(RepubLogStatus::Custom(hex, preamble.to_string()), to_string.to_string())
             }
@@ -152,6 +153,7 @@ pub mod message {
             Removed,
             /// config を保存した
             Config,
+            #[allow(dead_code)]
             Custom(u64, String),
         }
 
