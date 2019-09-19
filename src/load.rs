@@ -90,7 +90,7 @@ mod config {
         /// pack 対象から外すファイル targetからの相対パス
         pub ignores: Vec<String>,
         /// contents コンテンツに対して独自の指定をするとき
-        pub orders: Vec<OrderedContents>,
+        pub orders: Option<Vec<OrderedContents>>,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
