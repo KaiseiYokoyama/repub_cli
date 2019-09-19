@@ -37,18 +37,6 @@ impl<'a> TryFrom<clap::ArgMatches<'a>> for Input {
 
         let cfg = Config::try_from(&value)?;
 
-        // filter ignores
-        let src = src.into_iter().filter(|s| {
-            let rel_path_opt = PathBuf::path_diff(&cfg.target, &s.path);
-
-            if let Some(Some(rel_path)) = rel_path_opt.map(|p| p.to_str().map(|p| p.to_string())) {
-                if cfg.ignores.contains(&rel_path) {
-                    RepubLog::ignored(&format!("{:?}", &rel_path)).print();
-                    false
-                } else { true }
-            } else { true }
-        }).collect::<Vec<Source>>();
-
         Ok(Self {
             src,
             cfg,
@@ -90,7 +78,7 @@ mod config {
         /// pack 対象から外すファイル targetからの相対パス
         pub ignores: Vec<String>,
         /// contents コンテンツに対して独自の指定をするとき
-        pub contnts: Option<Vec<OrderedContents>>,
+        pub contents: Option<Vec<OrderedContents>>,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
@@ -268,10 +256,25 @@ mod config {
                 (a || b) && !(a && b)
             };
 
-            let mut ignores = vec![String::from(CONFIG_JSON)];
-            if let Some(Some(cover_image)) = cover_image.clone().map(|p| p.to_str().map(|s| s.to_string())) {
-                ignores.push(cover_image);
-            }
+            let mut ignores = {
+                // config.jsonによる指定がある場合
+                if let Some(ignores) = cfg.as_ref().map(|c| c.ignores.clone()) {
+                    ignores
+                } else {
+                    let mut ignores = vec![String::from(CONFIG_JSON), String::from(".DS_Store")];
+                    // カバー画像がある場合は ignores に追加
+                    if let Some(Some(cover_image)) = cover_image.clone().map(|p| p.to_str().map(|s| s.to_string())) {
+                        ignores.push(cover_image);
+                    }
+                    ignores
+                }
+            };
+
+            let contents
+                = match cfg {
+                Some(cfg) => cfg.contents.clone(),
+                None => None,
+            };
 
             // logger を初期化
             env_logger::Builder::from_default_env()
@@ -291,7 +294,7 @@ mod config {
                 config,
                 cover_image,
                 ignores,
-                contnts: Vec::new(),
+                contents,
             })
         }
     }
@@ -508,11 +511,11 @@ mod ordered_contents {
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct OrderedContents {
-        src: PathBuf,
+        pub src: PathBuf,
         #[serde(default)]
-        properties: Vec<Properties>,
+        pub properties: Vec<Properties>,
         #[serde(default)]
-        styles: Vec<PathBuf>,
+        pub styles: Vec<PathBuf>,
     }
 }
 

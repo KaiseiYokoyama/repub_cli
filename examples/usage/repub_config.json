@@ -12,7 +12,7 @@
   "cover_image": "cover.png",
   "ignores": [
     "repub_config.json",
-    "cover.png"
-  ],
-  "orders": []
+    "cover.png",
+    ".DS_Store"
+  ]
 }
