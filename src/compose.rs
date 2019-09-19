@@ -1,6 +1,6 @@
 use crate::{prelude::*, tmpfile::*, load::*, data::*, toc::*};
 use media_type::*;
-use properties::*;
+pub use properties::*;
 
 pub struct Composer {
     tmp_dir: TmpDir,
@@ -194,7 +194,7 @@ impl Composer {
                             let mut title = String::new();
                             node_text(child, &mut title);
                             // サニタイズ(テキストと認識されているので, HTMLとして成立していない)
-                            title.replace("<","&lt;").replace(">","&gt;")
+                            title.replace("<", "&lt;").replace(">", "&gt;")
                         };
 
                         // tocに登録
@@ -853,9 +853,12 @@ pub mod media_type {
 }
 
 pub mod properties {
+    use super::*;
+
     /// https://imagedrive.github.io/spec/epub30-publications.xhtml#sec-item-property-values
-    #[derive(Clone, PartialEq)]
+    #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
     #[allow(dead_code)]
+    #[serde(rename_all = "snake_case")]
     pub enum Properties {
         /// cover-image プロパティは、出版物のカバーイメージとして説明され Publication Resource を識別する
         CoverImage,

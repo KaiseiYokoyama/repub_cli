@@ -2,6 +2,7 @@ use clap::ArgMatches;
 
 use crate::prelude::*;
 pub use source::Source;
+pub use ordered_contents::OrderedContents;
 pub use config::{Config, WritingMode, PageProgressionDirection};
 
 /// 入力された情報(設定およびfile)
@@ -42,7 +43,7 @@ impl<'a> TryFrom<clap::ArgMatches<'a>> for Input {
 
             if let Some(Some(rel_path)) = rel_path_opt.map(|p| p.to_str().map(|p| p.to_string())) {
                 if cfg.ignores.contains(&rel_path) {
-                    RepubLog::ignored(&format!("{:?}",&rel_path)).print();
+                    RepubLog::ignored(&format!("{:?}", &rel_path)).print();
                     false
                 } else { true }
             } else { true }
@@ -88,6 +89,8 @@ mod config {
         pub cover_image: Option<PathBuf>,
         /// pack 対象から外すファイル targetからの相対パス
         pub ignores: Vec<String>,
+        /// contents コンテンツに対して独自の指定をするとき
+        pub orders: Vec<OrderedContents>,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
@@ -288,6 +291,7 @@ mod config {
                 config,
                 cover_image,
                 ignores,
+                orders: Vec::new(),
             })
         }
     }
@@ -496,6 +500,20 @@ mod source {
 //            })
 //        }
 //    }
+}
+
+mod ordered_contents {
+    use super::*;
+    use crate::compose::properties::Properties;
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct OrderedContents {
+        src: PathBuf,
+        #[serde(default)]
+        properties: Vec<Properties>,
+        #[serde(default)]
+        styles: Vec<PathBuf>,
+    }
 }
 
 #[cfg(test)]
