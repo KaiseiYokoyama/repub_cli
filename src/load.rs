@@ -61,6 +61,7 @@ mod config {
 
     /// 出力設定
     #[derive(Serialize, Deserialize, Debug, Default)]
+    #[serde(default)]
     pub struct Config {
         /// コマンドの<input>として与えられたpath(変換対象)
         pub target: PathBuf,
