@@ -394,7 +394,6 @@ impl Composer {
                         .filter(|c|
                             if let Some(src) = &c.src {
                                 if let Some(src_path_rel) = PathBuf::path_diff(&self.data.cfg.target, &src.path) {
-                                    println!("recognize: {:?}", src_path_rel);
                                     order.styles.contains(&src_path_rel)
                                 } else { false }
                             } else { false }).collect();
@@ -1051,7 +1050,6 @@ fn test_html5ever() {
         match child.data {
             NodeData::Element { ref name, ref attrs, .. } => {
                 if name.local == local_name!("ol") {
-                    println!("found ol tag");
                     attrs.borrow_mut().push(create_attribute("id", "new_id"));
                 }
             }
