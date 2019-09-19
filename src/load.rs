@@ -36,6 +36,18 @@ impl<'a> TryFrom<clap::ArgMatches<'a>> for Input {
 
         let cfg = Config::try_from(&value)?;
 
+        // filter ignores
+        let src = src.into_iter().filter(|s| {
+            let rel_path_opt = PathBuf::path_diff(&cfg.target, &s.path);
+
+            if let Some(Some(rel_path)) = rel_path_opt.map(|p| p.to_str().map(|p| p.to_string())) {
+                if cfg.ignores.contains(&rel_path) {
+                    RepubLog::ignored(&format!("{:?}",&rel_path)).print();
+                    false
+                } else { true }
+            } else { true }
+        }).collect::<Vec<Source>>();
+
         Ok(Self {
             src,
             cfg,
@@ -73,6 +85,8 @@ mod config {
         pub config: bool,
         /// 表紙 targetからの相対パス
         pub cover_image: Option<PathBuf>,
+        /// pack 対象から外すファイル targetからの相対パス
+        pub ignores: Vec<String>,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
@@ -250,6 +264,11 @@ mod config {
                 (a || b) && !(a && b)
             };
 
+            let mut ignores = vec![String::from(CONFIG_JSON)];
+            if let Some(Some(cover_image)) = cover_image.clone().map(|p| p.to_str().map(|s| s.to_string())) {
+                ignores.push(cover_image);
+            }
+
             // logger を初期化
             env_logger::Builder::from_default_env()
                 .format(|buf, record| writeln!(buf, "{}", record.args()))
@@ -267,6 +286,7 @@ mod config {
                 save,
                 config,
                 cover_image,
+                ignores,
             })
         }
     }
