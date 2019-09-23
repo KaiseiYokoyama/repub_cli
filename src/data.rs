@@ -65,7 +65,7 @@ mod files {
 
     /// コンテンツ
     /// 変換を必要とするファイル
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub struct ContentFile {
         pub src: Source,
         pub convert_type: ConvertType,
@@ -79,6 +79,7 @@ mod files {
                 let ext = value.ext.as_ref().ok_or(())?;
                 match ext.as_str() {
                     "md" => ConvertType::MarkdownToXHTML,
+                    "xhtml" => ConvertType::NoConversion,
                     _ => return Err(()),
                 }
             };
@@ -90,9 +91,37 @@ mod files {
         }
     }
 
+//    impl TryFrom<&OrderedContents> for ContentFile {
+//        type Error = failure::Error;
+//
+//        fn try_from(value: &OrderedContents) -> Result<Self, Self::Error> {
+//            let src = Source::try_from(&value.src)?;
+//            let convert_type = ConvertType::from(&value.src);
+//
+//            Ok(Self {
+//                src,
+//                convert_type,
+//            })
+//        }
+//    }
+
     /// 変換の種類
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub enum ConvertType {
         MarkdownToXHTML,
+        NoConversion,
+    }
+
+    impl From<&PathBuf> for ConvertType {
+        fn from(value: &PathBuf) -> Self {
+            if let Some(Some(s)) = value.extension().map(|e| e.to_str()) {
+                match s {
+                    "md" => ConvertType::MarkdownToXHTML,
+                    _ => ConvertType::NoConversion,
+                }
+            } else {
+                ConvertType::NoConversion
+            }
+        }
     }
 }

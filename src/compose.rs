@@ -1,12 +1,13 @@
 use crate::{prelude::*, tmpfile::*, load::*, data::*, toc::*};
 use media_type::*;
-use properties::*;
+pub use properties::*;
 
 pub struct Composer {
     tmp_dir: TmpDir,
     data: InputData,
     composed: Composed,
     toc: TableOfContents,
+    navigation: Option<ComposedItem>,
 }
 
 impl TryFrom<InputData> for Composer {
@@ -21,6 +22,7 @@ impl TryFrom<InputData> for Composer {
             data: value,
             composed,
             toc: TableOfContents::new(),
+            navigation: None,
         })
     }
 }
@@ -54,7 +56,7 @@ impl Drop for Composer {
                 file.write_all(json_str.as_bytes())?;
                 file.flush()?;
 
-                RepubLog::config(&format!("Saved to {:?}",&path)).print();
+                RepubLog::config(&format!("Saved to {:?}", &path)).print();
             }
 
             Ok(())
@@ -67,17 +69,31 @@ impl Drop for Composer {
         }
 
         if let Err(e) = output_cfg(&self.data.cfg) {
-            RepubError(format!("{}",e)).print();
+            RepubError(format!("{}", e)).print();
         }
     }
 }
 
-
 impl Composer {
+    fn filter_ignored_source(src: Vec<Source>, cfg: &Config) -> Vec<Source> {
+        src.into_iter().filter(|c| {
+            let rel_path_opt = PathBuf::path_diff(&cfg.target, &c.path);
+
+            if let Some(Some(rel_path)) = rel_path_opt.map(|p| p.to_str().map(|p| p.to_string())) {
+                if cfg.ignores.contains(&rel_path) {
+                    RepubLog::ignored(&format!("{:?}", &rel_path)).print();
+                    false
+                } else { true }
+            } else { true }
+        }).collect::<Vec<Source>>()
+    }
+
     /// css を tmp directoryに格納する
-    /// *compose_css* -> compose_static -> compose_contents -> compose_nav -> compose_opf
     pub fn compose_css(&mut self) -> RepubResult<&mut Self> {
-        for file in &self.data.files.style_files {
+        // ignore する
+        let style_files = Self::filter_ignored_source(self.data.files.style_files.clone(), &self.data.cfg);
+
+        for file in &style_files {
             let relative_path = PathBuf::path_diff(&self.data.cfg.target, &file.path).unwrap();
             let to = self.tmp_dir.oebps.path.join(&relative_path);
 
@@ -95,9 +111,11 @@ impl Composer {
     }
 
     /// static file を tmp directory に格納する
-    /// compose_css -> *compose_static* -> compose_contents -> compose_nav -> compose_opf
     pub fn compose_static(&mut self) -> RepubResult<&mut Self> {
-        for file in &self.data.files.static_files {
+        // ignore する
+        let static_files = Self::filter_ignored_source(self.data.files.static_files.clone(), &self.data.cfg);
+
+        for file in &static_files {
             let relative_path = PathBuf::path_diff(&self.data.cfg.target, &file.path).unwrap();
             let to = self.tmp_dir.oebps.path.join(&relative_path);
 
@@ -122,7 +140,8 @@ impl Composer {
     }
 
     /// content file を変換して, 内容を目次に登録し tmp directory に格納する
-    /// compose_css -> compose_static -> *compose_contents* -> compose_nav -> compose_opf
+    /// `.md`ファイルを変換してつくる`.xhtml`ファイルに`.css`を適用するので,
+    /// このメソッドの実行までに`compose_css()`を実行する必要がある
     pub fn compose_contents(&mut self) -> RepubResult<&mut Self> {
         use html5ever::{
             serialize,
@@ -131,10 +150,36 @@ impl Composer {
             serialize::SerializeOpts,
             QualName,
             LocalName,
-            rcdom::{RcDom, NodeData},
+            rcdom::{RcDom, NodeData, Handle},
             tendril::{TendrilSink, StrTendril},
             Attribute,
         };
+
+        fn filter_ignored_content_file(src: Vec<ContentFile>, cfg: &Config) -> Vec<ContentFile> {
+            src.into_iter().filter(|c| {
+                let rel_path_opt = PathBuf::path_diff(&cfg.target, &c.src.path);
+
+                if let Some(Some(rel_path)) = rel_path_opt.map(|p| p.to_str().map(|p| p.to_string())) {
+                    if cfg.ignores.contains(&rel_path) {
+                        RepubLog::ignored(&format!("{:?}", &rel_path)).print();
+                        false
+                    } else { true }
+                } else { true }
+            }).collect::<Vec<ContentFile>>()
+        }
+
+        fn filter_ignored_content_order(src: Vec<(ContentFile, OrderedContents)>, cfg: &Config) -> Vec<(ContentFile, OrderedContents)> {
+            src.into_iter().filter(|(c, o)| {
+                let rel_path_opt = PathBuf::path_diff(&cfg.target, &c.src.path);
+
+                if let Some(Some(rel_path)) = rel_path_opt.map(|p| p.to_str().map(|p| p.to_string())) {
+                    if cfg.ignores.contains(&rel_path) {
+                        RepubLog::ignored(&format!("{:?}", &rel_path)).print();
+                        false
+                    } else { true }
+                } else { true }
+            }).collect()
+        }
 
         fn register_to(toc: &mut TableOfContents, xhtml: &String, path_buf: &PathBuf) -> String {
             fn create_attribute(name: &str, value: &str) -> Attribute {
@@ -162,6 +207,20 @@ impl Composer {
                         ref name,
                         ref attrs, ..
                     } => {
+                        fn node_text(node: &Handle, text: &mut String) {
+                            match node.data {
+                                NodeData::Text { ref contents, .. } => {
+                                    let bind = contents.borrow();
+                                    let s = bind.as_ref();
+                                    text.push_str(s);
+                                }
+                                _ => {}
+                            }
+
+                            for child in node.children.borrow().iter() {
+                                node_text(child, text);
+                            }
+                        }
                         let level = match name.local {
                             local_name!("h1") => 1,
                             local_name!("h2") => 2,
@@ -176,12 +235,10 @@ impl Composer {
 
                         // タイトル抽出
                         let title = {
-                            if let NodeData::Text { ref contents, .. } = child.children.borrow()[0].data {
-                                contents.borrow().to_string()
-                            } else {
-                                RepubWarning(format!("ヘッダー {} のタイトルを読み込めませんでした", &id)).print();
-                                id.clone()
-                            }
+                            let mut title = String::new();
+                            node_text(child, &mut title);
+                            // サニタイズ(テキストと認識されているので, HTMLとして成立していない)
+                            title.replace("<", "&lt;").replace(">", "&gt;")
                         };
 
                         // tocに登録
@@ -226,61 +283,155 @@ impl Composer {
             }).collect::<Vec<String>>().join("<")
         }
 
-        for file in &self.data.files.content_files {
-            let composed =
-                match file.convert_type {
-                    ConvertType::MarkdownToXHTML => {
-                        let relative_path = PathBuf::path_diff(&self.data.cfg.target, &file.src.path).unwrap();
-                        let to = {
-                            let mut to_xhtml = self.tmp_dir.oebps.path.join(&relative_path);
-                            to_xhtml.set_extension("xhtml");
-                            to_xhtml
+        fn convert_content_file(file: &ContentFile, slf: &mut Composer, styles: Option<&Vec<ComposedItem>>) -> RepubResult<ComposedItem> {
+            match file.convert_type {
+                ConvertType::MarkdownToXHTML => {
+                    let relative_path = PathBuf::path_diff(&slf.data.cfg.target, &file.src.path).unwrap();
+                    let to = {
+                        let mut to_xhtml = slf.tmp_dir.oebps.path.join(&relative_path);
+                        to_xhtml.set_extension("xhtml");
+                        to_xhtml
+                    };
+
+                    let xhtml = {
+                        let mut options = comrak::ComrakOptions::default();
+                        options.github_pre_lang = true;
+                        options.ext_strikethrough = true;
+                        options.ext_tagfilter = true;
+                        options.ext_table = true;
+                        options.ext_autolink = true;
+                        options.ext_tasklist = true;
+                        options.hardbreaks = true;
+
+                        let source_str = {
+                            let mut string = String::new();
+                            std::fs::File::open(&file.src.path)?.read_to_string(&mut string)?;
+                            string
                         };
 
-                        let xhtml = {
-                            let mut options = comrak::ComrakOptions::default();
-                            options.github_pre_lang = true;
-                            options.ext_strikethrough = true;
-                            options.ext_tagfilter = true;
-                            options.ext_table = true;
-                            options.ext_autolink = true;
-                            options.ext_tasklist = true;
-                            options.hardbreaks = true;
+                        comrak::markdown_to_html(&source_str, &options)
+                    };
 
-                            let source_str = {
-                                let mut string = String::new();
-                                std::fs::File::open(&file.src.path)?.read_to_string(&mut string)?;
-                                string
-                            };
+                    // tocに登録, 整形
+                    let xhtml = register_to(&mut slf.toc, &xhtml, &to);
 
-                            comrak::markdown_to_html(&source_str, &options)
-                        };
+                    // スタイルシートへの<link>要素を生成
+                    let style_xhtml = if let Some(styles) = styles {
+                        styles.iter()
+                            .map(|ci| {
+                                let rel_path
+                                    = PathBuf::path_diff(&to, &ci.path)
+                                    .unwrap();
+                                format!("<link type=\"text/css\" rel=\"stylesheet\" href=\"{}\" />", &rel_path.to_str().unwrap())
+                            })
+                            .collect::<Vec<String>>()
+                            .join("\n")
+                    } else { slf.composed.styles_links(&to) };
 
-                        // tocに登録, 整形
-                        let xhtml = register_to(&mut self.toc, &xhtml, &to);
+                    // xhtmlを生成
+                    let xhtml = format!(
+                        include_str!("literals/template.xhtml"),
+                        &style_xhtml,
+                        &file.src.file_name,
+                        &xhtml
+                    );
 
-                        // スタイルシートへの<link>要素を生成
-                        let style_xhtml = self.composed.styles_links(&to);
+                    // 書き込み
+                    std::fs::File::create(&to)?.write_all(xhtml.as_bytes())?;
 
-                        // xhtmlを生成
-                        let xhtml = format!(
-                            include_str!("literals/template.xhtml"),
-                            &style_xhtml,
-                            &file.src.file_name,
-                            &xhtml
-                        );
+                    // ログ出力
+                    RepubLog::converted(&format!("{:?}", relative_path)).print();
 
-                        // 書き込み
-                        std::fs::File::create(&to)?.write_all(xhtml.as_bytes())?;
+                    ComposedItem::new(&file.src, &to, "contents", slf.composed.contents.len())
+                }
+                ConvertType::NoConversion => {
+                    let relative_path = PathBuf::path_diff(&slf.data.cfg.target, &file.src.path).unwrap();
+                    let to = slf.tmp_dir.oebps.path.join(&relative_path);
 
-                        // ログ出力
-                        RepubLog::converted(&format!("{:?}", relative_path)).print();
+                    // 書き込み
+                    std::fs::copy(&file.src.path, &to)?;
 
-                        ComposedItem::new(&file.src, &to, "contents", self.composed.contents.len())?
-                    }
-                };
+                    // ログ出力
+                    RepubLog::packed(&format!("{:?}", relative_path)).print();
 
-            self.composed.contents.push(composed);
+                    ComposedItem::new(&file.src, &to, "contents", slf.composed.contents.len())
+                }
+            }
+        }
+
+        match &self.data.cfg.contents {
+            None => {
+                let content_files = self.data.files.content_files.clone();
+                // ignoreする
+                let content_files = filter_ignored_content_file(content_files, &self.data.cfg);
+
+                for file in &content_files {
+                    let composed = convert_content_file(file, self, None)?;
+
+                    self.composed.contents.push(composed);
+                }
+            }
+            Some(contents) => {
+                let content_ordered: Vec<(ContentFile, OrderedContents)> = contents.iter().map(|oc| {
+                    let src_path = self.data.cfg.target.join(&oc.src);
+                    let src = Source::try_from(&src_path).ok()?;
+                    let convert_type = ConvertType::from(&src_path);
+
+                    Some((ContentFile {
+                        src,
+                        convert_type,
+                    }, oc.clone()))
+                }).flat_map(|o| o).collect();
+
+                // ignoreする
+                let content_files = filter_ignored_content_order(content_ordered, &self.data.cfg);
+
+                for (file, order) in &content_files {
+                    let styles: Vec<ComposedItem>
+                        = self.composed.style_items
+                        .clone()
+                        .into_iter()
+                        .filter(|c|
+                            if let Some(src) = &c.src {
+                                if let Some(src_path_rel) = PathBuf::path_diff(&self.data.cfg.target, &src.path) {
+                                    order.styles.contains(&src_path_rel)
+                                } else { false }
+                            } else { false }).collect();
+
+                    let mut composed = convert_content_file(file, self, Some(&styles))?;
+                    composed.properties.append(&mut order.properties.clone());
+
+                    self.composed.contents.push(composed);
+                }
+            }
+        }
+
+        Ok(self)
+    }
+
+    /// cover image が存在すれば pack する
+    pub fn compose_cover_image(&mut self) -> RepubResult<&mut Self> {
+        if let Some(image) = &self.data.cfg.cover_image {
+            let path = &self.data.cfg.target.join(image);
+            let relative_path = image;
+            let to = self.tmp_dir.oebps.path.join(&relative_path);
+
+            // epub3の対応している拡張子かどうかを確認する
+            match ComposedItem::without_src(&to, "static", self.composed.static_items.len()) {
+                Ok(mut composed) => {
+                    // 対応している拡張子ならばcopy
+                    std::fs::copy(&path, &to)?;
+                    // ログ出力
+                    RepubLog::packed(&format!("Cover Image ({:?})", &relative_path)).print();
+
+                    composed.properties.push(Properties::CoverImage);
+                    // <spine>要素への登録は不要 -> 登録先はstatic_itemsでok
+                    self.composed.static_items.push(composed);
+                }
+                Err(e) => {
+                    RepubWarning(format!("{:?} : {}", &path, &e)).print();
+                }
+            }
         }
 
         Ok(self)
@@ -310,10 +461,11 @@ impl Composer {
 
         std::fs::File::create(&path)?.write_all(xhtml.as_bytes())?;
 
-        // composedに登録
+        // 登録
         let mut composed = ComposedItem::without_src(&path, "navigation", 0)?;
         composed.properties.push(Properties::Nav);
-        self.composed.contents.push(composed);
+//        self.composed.contents.push(composed);
+        self.navigation = Some(composed);
 
         // ログ出力
         RepubLog::packed(&format!("{:?}", PathBuf::path_diff(&self.tmp_dir.path, &path).unwrap())).print();
@@ -341,17 +493,12 @@ impl Composer {
         );
 
         let manifest_str = {
-            let items_str = self.composed.contents
-                .iter()
-                .chain(
-                    self.composed.style_items.iter()
-                )
-                .chain(
-                    self.composed.static_items.iter()
-                )
-                .map(|ci| {
-                    ci.as_manifest_item(&path)
-                })
+            let items_str
+                = self.navigation.iter()
+                .chain(self.composed.contents.iter())
+                .chain(self.composed.style_items.iter())
+                .chain(self.composed.static_items.iter())
+                .map(|ci| ci.as_manifest_item(&path))
                 .collect::<Vec<String>>()
                 .join("\n");
 
@@ -361,38 +508,20 @@ impl Composer {
             )
         };
 
-        // todo 並びの変更, カバー画像
+        // 並びの変更
         let spine_str = {
-            let navs = {
-                let mut navs = vec![];
-                let mut navs_index = vec![];
-                for (index, content) in self.composed.contents.iter().enumerate() {
-                    if content.properties.contains(&Properties::Nav) {
-                        navs_index.push(index);
-                    }
-                }
+            let (handmade_navs, mut contents_without_navs): (Vec<ComposedItem>, Vec<ComposedItem>)
+                = self.composed.contents.clone().into_iter()
+                .partition(|c| c.properties.contains(&Properties::Nav));
 
-                navs_index.reverse();
-
-                for index in navs_index {
-                    navs.push(self.composed.contents.remove(index));
-                }
-
-                navs.sort_by(|a, b| a.id.cmp(&b.id));
-
-                navs
-            };
-
-            // ソート
-            self.composed.contents
+            // sort
+            contents_without_navs
                 .sort_by(|a, b| a.id.cmp(&b.id));
-            // navsを頭に挿入
-            for (index, nav) in navs.into_iter().enumerate() {
-                self.composed.contents.insert(index, nav);
-            }
 
-            let items_str = self.composed.contents
-                .iter()
+            let items_str
+                = self.navigation.iter()
+                .chain(handmade_navs.iter())
+                .chain(contents_without_navs.iter())
                 .map(|ci| ci.as_spine_item())
                 .collect::<Vec<String>>()
                 .join("\n");
@@ -426,7 +555,12 @@ impl Composer {
 
     /// すべてのファイルを(必要があれば)変換, 書き換えをして tmp directory に格納する
     pub fn compose(&mut self) -> RepubResult<()> {
-        self.compose_css()?.compose_static()?.compose_contents()?.compose_nav()?.compose_opf()?;
+        self.compose_css()?
+            .compose_static()?
+            .compose_contents()?
+            .compose_cover_image()?
+            .compose_nav()?
+            .compose_opf()?;
 
         if cfg!(target_os = "macos") {
             self.zip()?;
@@ -548,6 +682,7 @@ impl Composed {
     }
 }
 
+#[derive(Clone)]
 struct ComposedItem {
     #[allow(dead_code)]
     src: Option<Source>,
@@ -816,9 +951,12 @@ pub mod media_type {
 }
 
 pub mod properties {
+    use super::*;
+
     /// https://imagedrive.github.io/spec/epub30-publications.xhtml#sec-item-property-values
-    #[derive(Clone, PartialEq)]
+    #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
     #[allow(dead_code)]
+    #[serde(rename_all = "kebab-case")]
     pub enum Properties {
         /// cover-image プロパティは、出版物のカバーイメージとして説明され Publication Resource を識別する
         CoverImage,
@@ -912,7 +1050,6 @@ fn test_html5ever() {
         match child.data {
             NodeData::Element { ref name, ref attrs, .. } => {
                 if name.local == local_name!("ol") {
-                    println!("found ol tag");
                     attrs.borrow_mut().push(create_attribute("id", "new_id"));
                 }
             }

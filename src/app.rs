@@ -24,7 +24,7 @@ pub fn app<'a,'b>() -> App<'a,'b> {
             .long("verbose"))
         // タイトル
         .arg(Arg::with_name("title")
-            .help("タイトルを設定")
+            .help("タイトル")
             .short("t")
             .long("title")
             .takes_value(true))
@@ -45,6 +45,11 @@ pub fn app<'a,'b>() -> App<'a,'b> {
             .help("Book ID")
             .short("id")
             .long("bookid")
+            .takes_value(true))
+        // 表紙
+        .arg(Arg::with_name("cover_image")
+            .help("表紙 / Cover image")
+            .long("cover-image")
             .takes_value(true))
         // 縦書き
         .arg(Arg::with_name("writing_mode")

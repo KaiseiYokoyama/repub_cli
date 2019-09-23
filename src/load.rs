@@ -2,6 +2,7 @@ use clap::ArgMatches;
 
 use crate::prelude::*;
 pub use source::Source;
+pub use ordered_contents::OrderedContents;
 pub use config::{Config, WritingMode, PageProgressionDirection};
 
 /// 入力された情報(設定およびfile)
@@ -49,13 +50,17 @@ mod config {
 
     /// 出力設定
     #[derive(Serialize, Deserialize, Debug, Default)]
+    #[serde(default)]
     pub struct Config {
         /// コマンドの<input>として与えられたpath(変換対象)
         pub target: PathBuf,
         /// 書式
         pub writing_mode: WritingMode,
+        /// タイトル
         pub title: String,
+        /// 著者, 編集者, 翻訳者など
         pub creator: String,
+        /// 言語
         pub language: String,
         /// epub形式で本の識別に利用されるid
         pub book_id: String,
@@ -68,6 +73,12 @@ mod config {
         pub save: bool,
         /// config ファイルを出力する
         pub config: bool,
+        /// 表紙 targetからの相対パス
+        pub cover_image: Option<PathBuf>,
+        /// pack 対象から外すファイル targetからの相対パス
+        pub ignores: Vec<String>,
+        /// contents コンテンツに対して独自の指定をするとき
+        pub contents: Option<Vec<OrderedContents>>,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
@@ -108,7 +119,7 @@ mod config {
                 }
             }
 
-            let mut cfg = from_json(&target);
+            let cfg = from_json(&target);
 
             let title = {
                 if let Some(title) = value.value_of("title") {
@@ -170,7 +181,6 @@ mod config {
 
             let book_id = {
                 if let Some(id) = value.value_of("book_id") {
-                    println!("Book ID: {}", id);
                     id.to_string()
                 } else if let Some(cfg) = &cfg {
                     cfg.book_id.clone()
@@ -179,6 +189,25 @@ mod config {
                         .sample_iter(&Alphanumeric)
                         .take(30)
                         .collect::<String>()
+                }
+            };
+
+            let cover_image = {
+                if let Some(cover_image) = value.value_of("cover_image") {
+                    let path = PathBuf::from(cover_image);
+
+                    // Validation
+                    if path.exists() {
+                        PathBuf::path_diff(&target, &path)
+                    } else { None }
+                } else if let Some(cfg) = &cfg {
+                    // Validation
+                    let cover_image = cfg.cover_image.clone();
+                    cover_image.filter(|p| {
+                        target.join(p).exists()
+                    })
+                } else {
+                    None
                 }
             };
 
@@ -227,6 +256,26 @@ mod config {
                 (a || b) && !(a && b)
             };
 
+            let mut ignores = {
+                // config.jsonによる指定がある場合
+                if let Some(ignores) = cfg.as_ref().map(|c| c.ignores.clone()) {
+                    ignores
+                } else {
+                    let mut ignores = vec![String::from(CONFIG_JSON), String::from(".DS_Store")];
+                    // カバー画像がある場合は ignores に追加
+                    if let Some(Some(cover_image)) = cover_image.clone().map(|p| p.to_str().map(|s| s.to_string())) {
+                        ignores.push(cover_image);
+                    }
+                    ignores
+                }
+            };
+
+            let contents
+                = match cfg {
+                Some(cfg) => cfg.contents.clone(),
+                None => None,
+            };
+
             // logger を初期化
             env_logger::Builder::from_default_env()
                 .format(|buf, record| writeln!(buf, "{}", record.args()))
@@ -243,6 +292,9 @@ mod config {
                 verbose,
                 save,
                 config,
+                cover_image,
+                ignores,
+                contents,
             })
         }
     }
@@ -451,6 +503,20 @@ mod source {
 //            })
 //        }
 //    }
+}
+
+mod ordered_contents {
+    use super::*;
+    use crate::compose::properties::Properties;
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct OrderedContents {
+        pub src: PathBuf,
+        #[serde(default)]
+        pub properties: Vec<Properties>,
+        #[serde(default)]
+        pub styles: Vec<PathBuf>,
+    }
 }
 
 #[cfg(test)]
