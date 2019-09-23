@@ -28,6 +28,8 @@ repub usage
 変換対象のディレクトリに`repub_config.json`がある場合, 諸設定を`repub_config.json`から読み取ります. 
 また, 実行コマンドのオプションを重ねることで, `repub_config.json`の命令の上書きが可能です. 
 
+`repub_config.json`については, `examples/config/config.json`を御覧ください.
+
 ### Save: `--save`
 一時ファイルを消去しません. 
 

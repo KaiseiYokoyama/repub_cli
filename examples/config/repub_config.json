@@ -1,0 +1,18 @@
+{
+  "target": "config",
+  "writing_mode": "htb",
+  "title": "config",
+  "creator": "me",
+  "language": "ja",
+  "book_id": "SBDGInK1nP9YHIg6nylpaK25IKFtFw",
+  "toc_depth": 2,
+  "verbose": false,
+  "save": false,
+  "config": true,
+  "cover_image": null,
+  "ignores": [
+    "repub_config.json",
+    ".DS_Store"
+  ],
+  "contents": null
+}
