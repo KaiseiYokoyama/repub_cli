@@ -79,6 +79,8 @@ mod config {
         pub ignores: Vec<String>,
         /// contents コンテンツに対して独自の指定をするとき
         pub contents: Option<Vec<OrderedContents>>,
+        /// sequence: コンテンツに対して順序の指定をするとき
+        pub sequence: Option<Vec<PathBuf>>,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
@@ -272,7 +274,12 @@ mod config {
 
             let contents
                 = match cfg {
-                Some(cfg) => cfg.contents.clone(),
+                Some(ref cfg) => cfg.contents.clone(),
+                None => None,
+            };
+
+            let sequence = match cfg {
+                Some(ref cfg) => cfg.sequence.clone(),
                 None => None,
             };
 
@@ -295,6 +302,7 @@ mod config {
                 cover_image,
                 ignores,
                 contents,
+                sequence,
             })
         }
     }
