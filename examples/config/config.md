@@ -27,7 +27,8 @@ repub config --config
     "repub_config.json",
     ".DS_Store"
   ],
-  "contents": null
+  "sequence": null,
+  "content_configures": null
 }
 ```
 
