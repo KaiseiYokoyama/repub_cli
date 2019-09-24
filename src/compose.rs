@@ -75,17 +75,13 @@ impl Drop for Composer {
 }
 
 impl Composer {
-    fn filter_ignored_source(src: Vec<Source>, cfg: &Config) -> Vec<Source> {
+    fn filter_ignored_source<T: AsRef<Source>>(src: Vec<T>, cfg: &Config) -> Vec<T> {
+        let ignores = &cfg.ignores;
         src.into_iter().filter(|c| {
-            let rel_path_opt = PathBuf::path_diff(&cfg.target, &c.path);
-
-            if let Some(Some(rel_path)) = rel_path_opt.map(|p| p.to_str().map(|p| p.to_string())) {
-                if cfg.ignores.contains(&rel_path) {
-                    RepubLog::ignored(&format!("{:?}", &rel_path)).print();
-                    false
-                } else { true }
-            } else { true }
-        }).collect::<Vec<Source>>()
+            if let Some(p) = PathBuf::path_diff(&cfg.target, &c.as_ref().path) {
+                !ignores.contains(&p)
+            } else { false }
+        }).collect::<Vec<T>>()
     }
 
     /// css を tmp directoryに格納する
@@ -154,32 +150,6 @@ impl Composer {
             tendril::{TendrilSink, StrTendril},
             Attribute,
         };
-
-        fn filter_ignored_content_file(src: Vec<ContentFile>, cfg: &Config) -> Vec<ContentFile> {
-            src.into_iter().filter(|c| {
-                let rel_path_opt = PathBuf::path_diff(&cfg.target, &c.src.path);
-
-                if let Some(Some(rel_path)) = rel_path_opt.map(|p| p.to_str().map(|p| p.to_string())) {
-                    if cfg.ignores.contains(&rel_path) {
-                        RepubLog::ignored(&format!("{:?}", &rel_path)).print();
-                        false
-                    } else { true }
-                } else { true }
-            }).collect::<Vec<ContentFile>>()
-        }
-
-        fn filter_ignored_content_order(src: Vec<(ContentFile, OrderedContents)>, cfg: &Config) -> Vec<(ContentFile, OrderedContents)> {
-            src.into_iter().filter(|(c, o)| {
-                let rel_path_opt = PathBuf::path_diff(&cfg.target, &c.src.path);
-
-                if let Some(Some(rel_path)) = rel_path_opt.map(|p| p.to_str().map(|p| p.to_string())) {
-                    if cfg.ignores.contains(&rel_path) {
-                        RepubLog::ignored(&format!("{:?}", &rel_path)).print();
-                        false
-                    } else { true }
-                } else { true }
-            }).collect()
-        }
 
         fn register_to(toc: &mut TableOfContents, xhtml: &String, path_buf: &PathBuf) -> String {
             fn create_attribute(name: &str, value: &str) -> Attribute {
@@ -283,7 +253,7 @@ impl Composer {
             }).collect::<Vec<String>>().join("<")
         }
 
-        fn convert_content_file(file: &ContentFile, slf: &mut Composer, styles: Option<&Vec<ComposedItem>>) -> RepubResult<ComposedItem> {
+        fn convert_content_file(file: &ContentSource, slf: &mut Composer, styles: Option<Vec<ComposedItem>>) -> RepubResult<ComposedItem> {
             match file.convert_type {
                 ConvertType::MarkdownToXHTML => {
                     let relative_path = PathBuf::path_diff(&slf.data.cfg.target, &file.src.path).unwrap();
@@ -359,51 +329,36 @@ impl Composer {
             }
         }
 
-        match &self.data.cfg.contents {
-            None => {
-                let content_files = self.data.files.content_files.clone();
-                // ignoreする
-                let content_files = filter_ignored_content_file(content_files, &self.data.cfg);
+        let srcs = if let Some(srcs) = self.data.cfg.sequence.clone().map(|s| s.ptc(&self.data.cfg)) {
+            srcs
+        } else {
+            self.data.files.content_files.clone()
+        };
 
-                for file in &content_files {
-                    let composed = convert_content_file(file, self, None)?;
+        let ignores = self.data.cfg.ignores.clone().ptc(&self.data.cfg);
 
-                    self.composed.contents.push(composed);
-                }
+        // srcs から ignore に該当するものを差し引く
+        let srcs = srcs.into_iter().filter(|p| !ignores.contains(p)).collect::<Vec<ContentSource>>();
+
+        for src in &srcs {
+            let (properties, styles) =
+                if let Some(ContentConfigure { properties, styles, .. }) = self.data.cfg.config(src.as_ref()) {
+                    let properties = properties.iter().map(|p| p.clone()).collect::<Vec<Properties>>();
+
+                    let styles = styles.iter().map(|p| {
+                        let path = self.tmp_dir.oebps.path.join(p);
+                        self.composed.style_items.iter().find(|s| s.path == path).cloned()
+                    }).flat_map(|c| c).collect::<Vec<ComposedItem>>();
+
+                    (Some(properties), Some(styles))
+                } else { (None, None) };
+
+            let mut composed = convert_content_file(src, self, styles)?;
+
+            if let Some(mut prop) = properties {
+                composed.properties.append(&mut prop);
             }
-            Some(contents) => {
-                let content_ordered: Vec<(ContentFile, OrderedContents)> = contents.iter().map(|oc| {
-                    let src_path = self.data.cfg.target.join(&oc.src);
-                    let src = Source::try_from(&src_path).ok()?;
-                    let convert_type = ConvertType::from(&src_path);
-
-                    Some((ContentFile {
-                        src,
-                        convert_type,
-                    }, oc.clone()))
-                }).flat_map(|o| o).collect();
-
-                // ignoreする
-                let content_files = filter_ignored_content_order(content_ordered, &self.data.cfg);
-
-                for (file, order) in &content_files {
-                    let styles: Vec<ComposedItem>
-                        = self.composed.style_items
-                        .clone()
-                        .into_iter()
-                        .filter(|c|
-                            if let Some(src) = &c.src {
-                                if let Some(src_path_rel) = PathBuf::path_diff(&self.data.cfg.target, &src.path) {
-                                    order.styles.contains(&src_path_rel)
-                                } else { false }
-                            } else { false }).collect();
-
-                    let mut composed = convert_content_file(file, self, Some(&styles))?;
-                    composed.properties.append(&mut order.properties.clone());
-
-                    self.composed.contents.push(composed);
-                }
-            }
+            self.composed.contents.push(composed);
         }
 
         Ok(self)
@@ -682,7 +637,7 @@ impl Composed {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct ComposedItem {
     #[allow(dead_code)]
     src: Option<Source>,
@@ -757,7 +712,7 @@ pub mod media_type {
     use super::*;
 
     /// https://imagedrive.github.io/spec/epub30-publications.xhtml#tbl-core-media-types
-    #[derive(Clone, PartialEq)]
+    #[derive(Clone, PartialEq, Debug)]
     pub enum MediaType {
         Image(ImageType),
         Application(ApplicationType),
@@ -817,7 +772,7 @@ pub mod media_type {
         }
     }
 
-    #[derive(Clone, PartialEq)]
+    #[derive(Clone, PartialEq, Debug)]
     pub enum ImageType {
         GIF,
         JPEG,
@@ -851,7 +806,7 @@ pub mod media_type {
         }
     }
 
-    #[derive(Clone, PartialEq)]
+    #[derive(Clone, PartialEq, Debug)]
     pub enum ApplicationType {
         /// XHTML Content Document と EPUB Navigation Document
         XHTML,
@@ -892,7 +847,7 @@ pub mod media_type {
         }
     }
 
-    #[derive(Clone, PartialEq)]
+    #[derive(Clone, PartialEq, Debug)]
     pub enum AudioType {
         /// MP3 オーディオ
         MPEG,
@@ -922,7 +877,7 @@ pub mod media_type {
         }
     }
 
-    #[derive(Clone, PartialEq)]
+    #[derive(Clone, PartialEq, Debug)]
     pub enum TextType {
         CSS,
         JS,
@@ -986,6 +941,24 @@ pub mod properties {
                 Properties::Switch => "switch"
             }.to_string()
         }
+    }
+}
+
+use std::path::Path;
+use crate::prelude::PathBuf;
+
+trait PathToContentFile {
+    fn ptc(&self, cfg: &Config) -> Vec<ContentSource>;
+}
+
+impl<T: AsRef<Path>> PathToContentFile for Vec<T> {
+    fn ptc(&self, cfg: &Config) -> Vec<ContentSource> {
+        self.iter().map(|p| {
+            let path = cfg.target.join(p);
+            let src = Source::try_from(&path)?;
+
+            ContentSource::try_from(src)
+        }).flat_map(|c| c).collect::<Vec<ContentSource>>()
     }
 }
 

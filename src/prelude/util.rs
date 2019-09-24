@@ -7,7 +7,7 @@ pub use message::{
 
 use crate::prelude::*;
 
-pub const CONFIG_JSON :&str = "repub_config.json";
+pub const CONFIG_JSON: &str = "repub_config.json";
 
 pub mod message {
     use super::*;
@@ -103,7 +103,7 @@ pub mod message {
 
         impl RepubLog {
             pub fn ignored<T: ToString>(to_string: &T) -> Self {
-            Self(RepubLogStatus::Ignored, to_string.to_string())
+                Self(RepubLogStatus::Ignored, to_string.to_string())
             }
 
             pub fn packed<T: ToString>(to_string: &T) -> Self {

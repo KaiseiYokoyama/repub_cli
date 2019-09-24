@@ -28,7 +28,7 @@ mod files {
     #[derive(Debug)]
     pub struct Files {
         /// 変換を必要とするファイル
-        pub content_files: Vec<ContentFile>,
+        pub content_files: Vec<ContentSource>,
         /// スタイルを指定するファイル
         pub style_files: Vec<Source>,
         /// その他、変換を必要としないファイル
@@ -40,7 +40,7 @@ mod files {
             let (mut content_files, mut style_files, mut static_files) = (Vec::new(), Vec::new(), Vec::new());
 
             for src in srcs {
-                if let Ok(content_file) = ContentFile::try_from(src.clone()) {
+                if let Ok(content_file) = ContentSource::try_from(src.clone()) {
                     content_files.push(content_file);
                     continue;
                 }
@@ -65,22 +65,22 @@ mod files {
 
     /// コンテンツ
     /// 変換を必要とするファイル
-    #[derive(Debug, Clone)]
-    pub struct ContentFile {
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct ContentSource {
         pub src: Source,
         pub convert_type: ConvertType,
     }
 
-    impl TryFrom<Source> for ContentFile {
-        type Error = ();
+    impl TryFrom<Source> for ContentSource {
+        type Error = failure::Error;
 
         fn try_from(value: Source) -> Result<Self, Self::Error> {
             let convert_type = {
-                let ext = value.ext.as_ref().ok_or(())?;
+                let ext = value.ext.as_ref().ok_or(format_err!("{:?} の拡張子の取得に失敗しました", &value.path.file_name()))?;
                 match ext.as_str() {
                     "md" => ConvertType::MarkdownToXHTML,
                     "xhtml" => ConvertType::NoConversion,
-                    _ => return Err(()),
+                    e => return Err(format_err!("{} 形式のファイルはコンテンツとして収録できません", &e)),
                 }
             };
 
@@ -88,6 +88,12 @@ mod files {
                 src: value,
                 convert_type,
             })
+        }
+    }
+
+    impl AsRef<Source> for ContentSource {
+        fn as_ref(&self) -> &Source {
+            &self.src
         }
     }
 
@@ -106,7 +112,7 @@ mod files {
 //    }
 
     /// 変換の種類
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, PartialEq)]
     pub enum ConvertType {
         MarkdownToXHTML,
         NoConversion,

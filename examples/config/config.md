@@ -41,19 +41,29 @@ repub config --config
 ここにパスを指定されたファイルは, 変換時に無視されます. パスは`repub_config.json`からの相対パスです. 
 *このフィールドは省略可能です*. 
 
-### contents *experimental*
-このフィールドは省略可能です. 省略しない場合、オブジェクトの配列を指定します. 
-オブジェクトは以下のような形です. 
-
+### sequence
+コンテンツの並び順を指定します. 
 ```json
-{
-  "src": "relative/path/from/repub_config.json/to/content_file",
-  "properties": ["nav"],
-  "styles": [
-    "relative/path/from/repub_config.json/to/css_file0.css",
-    "relative/path/from/repub_config.json/to/css_file1.css"
-  ]
-}
+[
+  "sample1.md",
+  "sample2.md",
+  "sample3.md"
+]
+```
+
+このフィールドが存在する場合, 並び順を指定されなかったコンテンツのファイルは収録されません. 
+*このフィールドは省略可能です*. 
+
+### content_configures
+コンテンツに適用する`.css`ファイルや property を指定します. 
+```json
+[
+  {
+    "src": "configured.md",
+    "properties": ["nav"],
+    "styles": ["special.css", "more_special.css"]
+  }
+]
 ```
 
  - src
@@ -66,6 +76,5 @@ repub config --config
     - コンテンツに適用する`.css`ファイルを指定します
     - 配列の要素は`.css`ファイルへの`repub_config.json`からの相対パスです. 
     - *このプロパティは省略可能です*. 
-    
-***このフィールドが省略されていない場合, 配列に入っているオブジェクトに対応するコンテンツのみが`.epub`にパッケージされます. この挙動は[v0.4.1](https://github.com/KaiseiYokoyama/repub/issues/39)で変更する予定です***.
-*このフィールドは省略可能です*.
+
+*このフィールドは省略可能です*. 

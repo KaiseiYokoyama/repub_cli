@@ -14,5 +14,15 @@
     "repub_config.json",
     "cover.png",
     ".DS_Store"
+  ],
+  "sequence": null,
+  "content_configures": [
+    {
+      "src": "usage.md",
+      "properties": [],
+      "styles": [
+        "usage.css"
+      ]
+    }
   ]
 }
