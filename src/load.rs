@@ -2,7 +2,7 @@ use clap::ArgMatches;
 
 use crate::prelude::*;
 pub use source::Source;
-pub use ordered_contents::OrderedContents;
+pub use content_configures::ContentConfigure;
 pub use config::{Config, WritingMode, PageProgressionDirection};
 
 /// 入力された情報(設定およびfile)
@@ -76,11 +76,11 @@ mod config {
         /// 表紙 targetからの相対パス
         pub cover_image: Option<PathBuf>,
         /// pack 対象から外すファイル targetからの相対パス
-        pub ignores: Vec<String>,
-        /// contents コンテンツに対して独自の指定をするとき
-        pub contents: Option<Vec<OrderedContents>>,
-        /// sequence: コンテンツに対して順序の指定をするとき
+        pub ignores: Vec<PathBuf>,
+        /// sequence: コンテンツに対して順序の指定をする
         pub sequence: Option<Vec<PathBuf>>,
+        /// content configures: コンテンツに対するpropertyおよびstyleの指定
+        content_configures: Option<Vec<ContentConfigure>>,
     }
 
     impl<'a> TryFrom<&clap::ArgMatches<'a>> for Config {
@@ -263,23 +263,22 @@ mod config {
                 if let Some(ignores) = cfg.as_ref().map(|c| c.ignores.clone()) {
                     ignores
                 } else {
-                    let mut ignores = vec![String::from(CONFIG_JSON), String::from(".DS_Store")];
+                    let mut ignores = vec![PathBuf::from(CONFIG_JSON), PathBuf::from(".DS_Store")];
                     // カバー画像がある場合は ignores に追加
                     if let Some(Some(cover_image)) = cover_image.clone().map(|p| p.to_str().map(|s| s.to_string())) {
-                        ignores.push(cover_image);
+                        ignores.push(PathBuf::from(&cover_image));
                     }
                     ignores
                 }
             };
 
-            let contents
-                = match cfg {
-                Some(ref cfg) => cfg.contents.clone(),
+            let sequence = match cfg {
+                Some(ref cfg) => cfg.sequence.clone(),
                 None => None,
             };
 
-            let sequence = match cfg {
-                Some(ref cfg) => cfg.sequence.clone(),
+            let content_configures = match cfg {
+                Some(ref cfg) => cfg.content_configures.clone(),
                 None => None,
             };
 
@@ -301,9 +300,23 @@ mod config {
                 config,
                 cover_image,
                 ignores,
-                contents,
+                content_configures,
                 sequence,
             })
+        }
+    }
+
+    impl Config {
+        pub fn config(&self, src: &Source) -> Option<&ContentConfigure> {
+            match &self.content_configures {
+                None => None,
+                Some(s) => {
+                    s.iter().find(|c| {
+                        self.target.join(&c.src) == src.path
+                    })
+                }
+            }
+            // todo rewrite with .flatten()
         }
     }
 
@@ -431,7 +444,7 @@ mod source {
     use super::*;
     use std::fs::DirEntry;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, PartialEq)]
     pub struct Source {
         pub file_name: String,
         pub ext: Option<String>,
@@ -491,6 +504,12 @@ mod source {
         }
     }
 
+    impl AsRef<Source> for Source {
+        fn as_ref(&self) -> &Source {
+            &self
+        }
+    }
+
 //    pub enum SourceType {
 //        /// 変換の必要なfile ex. .md
 //        Content,
@@ -513,12 +532,12 @@ mod source {
 //    }
 }
 
-mod ordered_contents {
+mod content_configures {
     use super::*;
     use crate::compose::properties::Properties;
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
-    pub struct OrderedContents {
+    pub struct ContentConfigure {
         pub src: PathBuf,
         #[serde(default)]
         pub properties: Vec<Properties>,
